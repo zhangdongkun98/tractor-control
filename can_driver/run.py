@@ -5,6 +5,7 @@
 from time import sleep
 import threading
 import platform
+import numpy as np
 
 import canlib.canlib as canlib
 from canlib.canlib import ChannelData
@@ -69,11 +70,17 @@ class Controller:
         self.tear_down_channel(self.recv_channel)
 
     def send(self):
+        return
         self.send_channel
+        i = 0
         while not self.stop_send.is_set():
+            i += 1
             self.send_channel.write_raw(self.msgId, self.msg, self.flg)
             # print(f"tx: {self.msg}")
+            # print('self: ', 'one time')
             sleep(1./self.send_freq) # 10Hz
+            # if i > 10:
+                # return
 
         print("Stopped sending messages")
 
@@ -108,6 +115,8 @@ class Controller:
                 print(ex)
         # file.close()
         print("Stopped receiving messages")
+
+
 
     # 0~1
     def set_speed(self, speed):
@@ -166,19 +175,51 @@ if __name__ == '__main__':
     steps = 10
     # import time
     # start = time.time()
+
+    # ctrl.set_rotation(30)
+    ctrl.set_rotation(90)
+
+    while True:
+        ctrl.set_rotation(50)
+        import pdb; pdb.set_trace()
+        ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+        # sleep(1./ctrl.send_freq) # 10Hz
+        # ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+        # sleep(1./ctrl.send_freq) # 10Hz
+        # ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+    # sleep(1./ctrl.send_freq) # 10Hz
+    # ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+    # sleep(1./ctrl.send_freq) # 10Hz
+    # ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+    # sleep(1./ctrl.send_freq) # 10Hz
+
+    print('//////////////////// hewer')
+    exit(0)
+
     while True:
         cnt += steps
+
+        ctrl.set_rotation(-30)
+        # sleep(0.1)
+        sleep(0.1)
+
+
+
         # ctrl.set_speed(0.5)
         # sleep(0.5)
         # sleep(5)
         # ctrl.set_rotation(100)
         # sleep(0.1)
-        ctrl.set_speed(1)
-        sleep(15)
+
+        # ctrl.set_speed(1)
+        # sleep(15)
+
         # ctrl.set_rotation(-100)
         # sleep(0.1)
-        ctrl.set_speed(0)
-        sleep(15)
+
+        # ctrl.set_speed(0)
+        # sleep(15)
+
         # ctrl.set_rotation(-2)
         # ctrl.set_speed(1)
         # sleep(1)
@@ -186,11 +227,12 @@ if __name__ == '__main__':
         # ctrl.set_speed(0)
         # sleep(1)
         # ctrl.set_speed(1)
-        # theta = (math.pi/180) * cnt
-        # value = math.sin(theta)
+        theta = (math.pi/180) * cnt
+        print('------------------------theta: ', np.rad2deg(theta))
+        value = math.sin(theta)
         # ctrl.set_speed(value)
-        # ctrl.set_rotation(90*value)
-        # sleep(0.2)
+        ctrl.set_rotation(30*value)
+        sleep(0.2)
         # ctrl.set_speed(0)
         # sleep(12)
         # ctrl.set_speed(1)
