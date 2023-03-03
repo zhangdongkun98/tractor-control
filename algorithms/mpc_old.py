@@ -1,9 +1,57 @@
+from operator import ne
+from re import U
+from xxlimited import Null
 import numpy as np
-np.set_printoptions(precision=6, linewidth=65536, suppress=True, threshold=np.inf)
 import math
 from scipy import sparse
 from scipy.spatial import KDTree
 import osqp
+import matplotlib.pyplot as plt
+import time
+
+import sys
+
+v_d = 10.0
+dt = 0.1
+sim_steps = 200
+
+def load_ref_traj():
+    ref_traj = np.zeros((sim_steps, 5))
+
+    for i in range(sim_steps):
+        ref_traj[i, 0] = 5 * i * dt
+        ref_traj[i, 1] = 5.0
+        ref_traj[i, 2] = 0.0
+        ref_traj[i, 3] = v_d
+        ref_traj[i, 4] = 0.0
+
+    return ref_traj
+
+class UGV_model:
+    def __init__(self, x0, y0, theta0, L, T): # L:wheel base
+        self.x = x0 # X
+        self.y = y0 # Y
+        self.theta = theta0 # headding
+        self.l = L  # wheel base
+        self.dt = T  # decision time periodic
+
+    def update(self, vt, deltat):  # update ugv's state
+        self.v = vt
+
+        dx = self.v * np.cos(self.theta)
+        dy = self.v * np.sin(self.theta)
+        dtheta = self.v * np.tan(deltat) / self.l
+
+        self.x += dx * self.dt
+        self.y += dy * self.dt
+        self.theta += dtheta * self.dt
+        
+    def plot_duration(self):
+        plt.scatter(self.x, self.y, color='r')   
+        plt.axis([-5, 100, -6, 6])
+
+        plt.pause(0.008)
+
 
 class MPCController():
     def __init__(self, L, dt):
@@ -17,20 +65,11 @@ class MPCController():
 
         self.T = dt
 
+    def Solve(self, x, u_pre, ref_traj):
 
-    def Solve(self, x, u_pre, ref_traj, t=None):
-        if not hasattr(self, 'tree'):
-            self.tree = KDTree(ref_traj[:, :2])
-
-        ### path ref
-        nearest_ref_info = self.tree.query(x[:2])
+        tree = KDTree(ref_traj[:, :2])
+        nearest_ref_info = tree.query(x[:2])
         nearest_ref_x = ref_traj[nearest_ref_info[1]]
-
-        ### traj ref
-        nearest_ref_x = ref_traj[t]
-
-        # if k == 90:
-        #     import pdb; pdb.set_trace()
 
         a = np.array([
             [1.0,  0,   -nearest_ref_x[3] * math.sin(nearest_ref_x[2]) * self.T],
@@ -141,9 +180,7 @@ class MPCController():
         A_cons = sparse.csc_matrix(A_cons)
 
         # Setup workspace
-        prob.setup(H, F.transpose(), A_cons, LB, UB, verbose=False)
-        # prob.update_settings(verbose=False)
-        # import pdb; pdb.set_trace()
+        prob.setup(H, F.transpose(), A_cons, LB, UB)
 
         res = prob.solve()
 
@@ -155,3 +192,53 @@ class MPCController():
 
         return u_cur, res.x[0 : self.Nu]
 
+
+#u_0 = [3.0, 0.0]
+x = np.array([0.0, 0.0, 0.0])
+pre_u = np.array([0.0, 0.0])
+L = 2.6
+
+ref_traj = load_ref_traj()
+
+plt.figure(figsize=(18, 3))
+plt.plot(ref_traj[:,0], ref_traj[:,1], '-.b', linewidth=5.0)
+
+history_us = np.array([])
+history_delta_us = np.array([])
+
+ugv = UGV_model(x[0], x[1], x[2], L, dt)
+controller = MPCController(L, dt)
+for k in range(sim_steps):
+
+    if k == 1:
+        time.sleep(20)
+
+    u_cur, delta_u_cur = controller.Solve(x, pre_u, ref_traj)
+    abs_u = [v_d, 0.0] + u_cur
+
+    print(abs_u)
+
+    ugv.update(abs_u[0], abs_u[1])
+    ugv.plot_duration()
+
+    # history_us = np.append(history_us, abs_u)
+    if len(history_delta_us) == 0:
+        history_delta_us = np.array([u_cur])
+    else:
+        history_delta_us = np.vstack((history_delta_us, u_cur))
+
+    x = x + np.array([abs_u[0] * np.math.cos(x[2]) * dt,
+                    abs_u[0] * np.math.sin(x[2]) * dt,
+                    abs_u[0] * np.math.tan(abs_u[1]) / L * dt])
+
+    pre_u = u_cur
+
+# plt.show()
+plt.savefig('results/res_old.png')
+
+
+# plt.figure(num = 1, figsize = (3,5))
+# plt.plot(np.linspace(0, v_d * sim_steps * dt, 50), [0.2] * 50, color='green', linewidth=3.0, linestyle='--')
+# plt.plot(np.linspace(0, v_d * sim_steps * dt, 50), [-0.2] * 50, color='green', linewidth=3.0, linestyle='--')
+# plt.plot(np.linspace(0, v_d * sim_steps * dt, len(history_delta_us)), history_delta_us[:, 0], color='orange', linewidth=3.0, linestyle='--')
+# plt.show()
