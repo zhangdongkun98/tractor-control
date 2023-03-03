@@ -17,8 +17,20 @@ class MPCController():
 
         self.T = dt
 
+        self.pre_u = np.zeros(self.Nu)
 
-    def Solve(self, x, u_pre, ref_traj, t=None):
+
+
+
+    def select_action(self, x, ref_traj, time_step):
+        u_cur, delta_u_cur = self.Solve(x, ref_traj, time_step)
+        u_ref = ref_traj[time_step][-2:]
+        control = u_ref + u_cur
+        print(f'[mpc] step {time_step}: control {control}')
+        return np.expand_dims(control, axis=0)
+
+
+    def get_reference_x(self, x, ref_traj, t):
         if not hasattr(self, 'tree'):
             self.tree = KDTree(ref_traj[:, :2])
 
@@ -27,10 +39,14 @@ class MPCController():
         nearest_ref_x = ref_traj[nearest_ref_info[1]]
 
         ### traj ref
-        nearest_ref_x = ref_traj[t]
+        # nearest_ref_x = ref_traj[t]
+        return nearest_ref_x
 
-        # if k == 90:
-        #     import pdb; pdb.set_trace()
+    def Solve(self, x, ref_traj, t=None):
+        u_pre = self.pre_u
+
+        nearest_ref_x = self.get_reference_x(x, ref_traj, t)
+
 
         a = np.array([
             [1.0,  0,   -nearest_ref_x[3] * math.sin(nearest_ref_x[2]) * self.T],
@@ -152,6 +168,7 @@ class MPCController():
             raise ValueError('OSQP did not solve the problem!')
 
         u_cur = u_pre + res.x[0 : self.Nu]
+        self.pre_u = u_cur
 
         return u_cur, res.x[0 : self.Nu]
 

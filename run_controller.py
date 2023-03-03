@@ -79,7 +79,7 @@ for k in range(sim_steps):
 
     t1 = time.time()
     x = ugv.get_state()
-    u_cur, delta_u_cur = controller.Solve(x, pre_u, ref_traj, t=k)
+    u_cur, delta_u_cur = controller.Solve(x, ref_traj, t=k)
     t2 = time.time()
     print(f'solve time {k}: {t2-t1}, control: {u_cur}')
     abs_u = [v_d, 0.0] + u_cur
@@ -108,7 +108,6 @@ for k in range(sim_steps):
     #                 abs_u[0] * np.math.sin(x[2]) * dt,
     #                 abs_u[0] * np.math.tan(abs_u[1]) / L * dt])
 
-    pre_u = u_cur
 
 
 error_paths = np.array(error_paths)
@@ -128,7 +127,8 @@ axes[3].set_xlabel(f'error traj, min: {np.round(np.min(error_trajs), 4)}, mean: 
 
 # plt.axis([-5, 100, -6, 6])
 # plt.show()
-plt.savefig('results/res.png')
+plt.savefig('results/res.png', bbox_inches='tight')
+plt.savefig('results/res.pdf', bbox_inches='tight')
 
 # import pdb; pdb.set_trace()
 

@@ -15,3 +15,11 @@ pip install keyboard==0.13.5
 fangxiangpan  1 and a half
 
 feedback max 4780
+
+
+
+### simulation
+
+```bash
+pip install osqp==0.6.2.post0
+```
