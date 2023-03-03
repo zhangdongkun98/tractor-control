@@ -75,7 +75,7 @@ class MPCController():
 
         Q = np.eye(self.Nx * self.Np)
 
-        R = 5.0 * np.eye(self.Nu * self.Nc)
+        R = 0.2 * np.eye(self.Nu * self.Nc)
 
         rho = 10
 
@@ -95,11 +95,11 @@ class MPCController():
         F[ 0,  0 : self.Nu * self.Nc] = F_1
 
         # constraints
-        umin = np.array([[-0.2], [-0.54]])
-        umax = np.array([[0.2], [0.332]])
+        umax = np.array([[0.2], [np.deg2rad(45)]])
+        umin = -umax
 
-        delta_umin = np.array([[-0.05], [-0.0082]])
-        delta_umax = np.array([[0.05], [0.0082]])
+        delta_umax = np.array([[0.1], [0.08]])
+        delta_umin = -delta_umax
 
         A_t = np.zeros((self.Nc, self.Nc))
         for row in range(self.Nc):
