@@ -3,6 +3,7 @@
 
 # Device: Kvaser leaf light 2xHS
 from time import sleep
+import time
 import threading
 import platform
 import numpy as np
@@ -181,8 +182,9 @@ if __name__ == '__main__':
 
     while True:
         ctrl.set_rotation(50)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
+        time.sleep(0.1)
         # sleep(1./ctrl.send_freq) # 10Hz
         # ctrl.send_channel.write_raw(ctrl.msgId, ctrl.msg, ctrl.flg)
         # sleep(1./ctrl.send_freq) # 10Hz

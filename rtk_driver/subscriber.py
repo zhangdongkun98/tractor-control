@@ -9,6 +9,8 @@ from std_msgs.msg import Header
 from gps_common.msg import GPSFix
 
 
+from rtk_driver import GPStoXY
+
 
 
 class RTK(object):
@@ -28,6 +30,10 @@ class RTK(object):
         print(msg)
         self.latitude = msg.latitude
         self.longitude = msg.longitude
+        self.x, self.y = GPStoXY(msg.latitude, msg.longitude)
+
+
+
         return
 
 
@@ -41,7 +47,8 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)
     plt.gca().set_aspect('equal')
     while not rospy.is_shutdown():
-        plt.plot(rtk.latitude, rtk.longitude, 'or')
+        # plt.plot(rtk.latitude, rtk.longitude, 'or')
+        plt.plot(rtk.x, rtk.y, 'or')
         plt.pause(0.001)
         rate.sleep()
 

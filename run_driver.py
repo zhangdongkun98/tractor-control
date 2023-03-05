@@ -42,11 +42,18 @@ if __name__ == '__main__':
     
     clock = Clock(10)
 
-    try:
+    start_time = time.time()
 
+    try:
+        
+        
         # while True:
         #     clock.tick_begin()
-        #     can_driver.set_rotation(50)
+        #     deg = (time.time() - start_time) *30
+        #     deg2 = np.sin(np.deg2rad(deg)) *50
+        #     print('deg: ', deg2)
+        #     can_driver.set_rotation(deg2)
+        #     # import pdb; pdb.set_trace()
         #     clock.tick_end()
         
         kb_controller = KeyBoardController(can_driver)

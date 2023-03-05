@@ -19,7 +19,10 @@ import math
 X轴正方向为北，Y轴正方向为东。
 '''
 
-def GPStoXY(self, lat, lon, ref_lat, ref_lon):
+CONSTANTS_RADIUS_OF_EARTH = 6371000
+
+
+def GPStoXY(lat, lon, ref_lat=30.258824339333334, ref_lon=119.72750057183333):
         # input GPS and Reference GPS in degrees
         # output XY in meters (m) X:North Y:East
         lat_rad = math.radians(lat)
@@ -41,8 +44,8 @@ def GPStoXY(self, lat, lon, ref_lat, ref_lon):
         if abs(c) > 0:
             k = (c / math.sin(c))
 
-        x = float(k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * self.CONSTANTS_RADIUS_OF_EARTH)
-        y = float(k * cos_lat * math.sin(lon_rad - ref_lon_rad) * self.CONSTANTS_RADIUS_OF_EARTH)
+        x = float(k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH)
+        y = float(k * cos_lat * math.sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH)
 
         return x, y
 

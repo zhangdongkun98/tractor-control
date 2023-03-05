@@ -33,8 +33,8 @@ class CanDriver(object):
         self.cmd = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         self.flg = canlib.canMSG_EXT
 
-        # self.send_channel = self.set_up_channel(channel=0 if self.change_channel else 1)
-        self.send_channel = PseudoChannel()
+        self.send_channel = self.set_up_channel(channel=0 if self.change_channel else 1)
+        # self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
         # self.stop_send = threading.Event()
@@ -112,6 +112,7 @@ class CanDriver(object):
                     # (time, msgId, flg, dlc, data))
             except (canlib.canNoMsg) as ex:
                 # print("nothing")
+                import time
                 time.sleep(0.001)
                 pass
             except (canlib.canError) as ex:
