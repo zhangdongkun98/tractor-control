@@ -56,7 +56,8 @@ class Scenario(rl_template.ScenarioSingleAgent):
     type_id = 'vehicle.tesla.model3'
     obstacle_type_id = 'vehicle.*'
 
-    map_name = 'Town01'
+    # map_name = 'Town01'
+    map_name = 'agri_rounds_v0'
 
 
     def get_scenario_randomization(self):
