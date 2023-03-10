@@ -21,16 +21,20 @@ class MPCController():
 
 
 
+    def set_global_path(self, global_path):
+        self.global_path = global_path
 
-    def select_action(self, x, ref_traj, time_step):
-        u_cur, delta_u_cur = self.Solve(x, ref_traj, time_step)
+
+    def select_action(self, state, ref_traj, time_step):
+        u_cur, delta_u_cur = self.Solve(state.pose, ref_traj, time_step)
         u_ref = ref_traj[time_step][-2:]
         control = u_ref + u_cur
         print(f'[mpc] step {time_step}: control {control}')
         return np.expand_dims(control, axis=0)
 
 
-    def get_reference_x(self, x, ref_traj, t):
+    def get_reference_x(self, state, ref_traj, t):
+        x = state.pose
         if not hasattr(self, 'tree'):
             self.tree = KDTree(ref_traj[:, :2])
 

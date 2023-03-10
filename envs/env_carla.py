@@ -30,8 +30,9 @@ sensors_param_list = [
 
 
 
-# sampling_resolution
-SR = 0.02
+SR = 0.02  ### sampling_resolution
+FREQ = 50  ### frequency
+
 
 
 class ScenarioRandomization(rl_template.ScenarioRandomization):
@@ -50,14 +51,14 @@ class ScenarioRandomization(rl_template.ScenarioRandomization):
 
 
 class Scenario(rl_template.ScenarioSingleAgent):
-    time_tolerance = 500
+    time_tolerance = FREQ *50
     num_vehicles = 1
     max_velocity = 5.0
     type_id = 'vehicle.tesla.model3'
     obstacle_type_id = 'vehicle.*'
 
-    # map_name = 'Town01'
-    map_name = 'agri_rounds_v0'
+    map_name = 'Town01'
+    # map_name = 'agri_rounds_v0'
 
 
     def get_scenario_randomization(self):
@@ -127,7 +128,23 @@ class AgentLongitudinalControl(cu.BaseAgent):
         current_state = cu.cvt.CuaState.carla_transform(current_transform, v=current_v)
         target_state = cu.cvt.CuaState.carla_transform(target_waypoint.transform, v=velocity, k=curvature)
         control = self.controller.run_step(current_state, target_state)
+        print('control: ', control)
         return control
+
+
+
+    def get_reference_trajectory(self):
+        reference_trajectory = np.zeros((self.config.time_tolerance, 5))
+        v = self.max_velocity
+        for i in range(self.config.time_tolerance):
+            index = int(v * i / self.config.control_frequency / SR)
+            reference_trajectory[i, 0] = self.global_path.x[index]
+            reference_trajectory[i, 1] = self.global_path.y[index]
+            reference_trajectory[i, 2] = self.global_path.theta[index]
+            reference_trajectory[i, 3] = v
+            reference_trajectory[i, 4] = np.arctan(self.global_path.curvatures[index] * self.wheelbase)  ## ! todo check
+
+        return reference_trajectory
 
 
 
@@ -193,6 +210,7 @@ class AgentNoLearning(cu.BaseAgent):
 class AgentListMaster(cu.AgentListMaster):
     Perception = PerceptionImage
     Agent = AgentNoLearning
+    # Agent = AgentLongitudinalControl
 
     dim_state = Perception.dim_state
     dim_action = Agent.dim_action
@@ -228,7 +246,7 @@ class AgentListMaster(cu.AgentListMaster):
         state = agent.get_state()
         pose = np.array([state.x, state.y, state.theta])
 
-        return rldev.Data(pose=pose)
+        return rldev.Data(pose=pose, velocity=state.v)
 
 
 
@@ -252,8 +270,8 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
 
     sensors_params = sensors_param_list
 
-    decision_frequency = 10
-    control_frequency = 10
+    decision_frequency = FREQ
+    control_frequency = FREQ
 
     perception_range = 50.0
 
