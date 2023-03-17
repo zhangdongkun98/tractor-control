@@ -4,8 +4,8 @@ import time
 import numpy as np
 
 
-from can_driver.driver import CanDriver
-from can_driver.kb_controller import KeyBoardController
+from driver.can import CanDriver
+from kb_controller import KeyBoardController
 
 
 

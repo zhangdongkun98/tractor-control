@@ -1,6 +1,7 @@
 
 import keyboard
-from .driver import CanDriver
+from driver.can import CanDriver
+
 
 class KeyBoardController(object):
     def __init__(self, driver: CanDriver):
