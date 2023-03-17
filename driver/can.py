@@ -22,6 +22,7 @@ class PseudoChannel(object):
         return
 
 
+# Device: Kvaser leaf light 2xHS
 class CanDriver(object):
     def __init__(self, change_channel=False):
         self.change_channel = change_channel
@@ -37,10 +38,22 @@ class CanDriver(object):
         # self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
-        # self.stop_send = threading.Event()
         self.stop_recv = threading.Event()
-        # self.send_cyclic = threading.Thread(target=self.send, args=())
         self.recv_cyclic = threading.Thread(target=self.recv, args=())
+        self.stop_recv.clear()
+        self.recv_cyclic.start()
+
+        ### set_query_mode
+        # cycle 0: 1s, 1: 100ms, 2:200ms, 3: 500ms
+        self.clear_cmd()
+        self.cmd[0] = 0x03
+        self.cmd[1] = 0x01#0x00 if once else 0x01
+        self.cmd[2] = 0x01#cycle & 0xff
+        self.send_channel.write_raw(self.msgId, self.cmd, self.flg)
+
+        time.sleep(0.1)
+        return
+    
 
     def set_up_channel(self,  channel=0,
                     openFlags=canlib.canOPEN_ACCEPT_VIRTUAL,
@@ -56,26 +69,16 @@ class CanDriver(object):
         return ch
 
 
-
-    def tear_down_channel(self, ch):
-        ch.busOff()
-        ch.close()
-
-    def start(self):
-        # self.stop_send.clear()
-        self.stop_recv.clear()
-        
-        # self.send_cyclic.start()
-        self.recv_cyclic.start()
-
     def stop_event(self):
         # self.stop_send.set()
         self.stop_recv.set()
 
-
     def close(self):
-        self.tear_down_channel(self.send_channel)
-        self.tear_down_channel(self.recv_channel)
+        def tear_down_channel(ch):
+            ch.busOff()
+            ch.close()
+        tear_down_channel(self.send_channel)
+        tear_down_channel(self.recv_channel)
 
 
 
@@ -133,17 +136,11 @@ class CanDriver(object):
 
 
 
+
     def clear_cmd(self):
         for i in range(8):
             self.cmd[i] = 0x00
 
-    # cycle 0: 1s, 1: 100ms, 2:200ms, 3: 500ms
-    def set_query_mode(self, once: bool, cycle: int):
-        self.clear_cmd()
-        self.cmd[0] = 0x03
-        self.cmd[1] = 0x01#0x00 if once else 0x01
-        self.cmd[2] = 0x01#cycle & 0xff
-        self.send_channel.write_raw(self.msgId, self.cmd, self.flg)
 
     def set_read_angle(self):
         self.clear_cmd()

@@ -9,12 +9,13 @@ from std_msgs.msg import Header
 from gps_common.msg import GPSFix
 
 
-from rtk_driver import GPStoXY
+from driver.projection import Projection
 
 
 
 class RTK(object):
     def __init__(self):
+        self.projection = Projection()
 
         self.speed = 0.
         self.yaw = 0.
@@ -22,17 +23,13 @@ class RTK(object):
         self.longitude = 0.
 
         rtk_pub = rospy.Subscriber('/rtk_data', GPSFix, callback=self.callback, queue_size=1)
-        
-
 
 
     def callback(self, msg):
         print(msg)
         self.latitude = msg.latitude
         self.longitude = msg.longitude
-        self.x, self.y = GPStoXY(msg.latitude, msg.longitude)
-
-
+        self.x, self.y = self.projection.gps2xy(msg.latitude, msg.longitude)
 
         return
 
@@ -44,7 +41,7 @@ if __name__ == '__main__':
     rtk = RTK()
     time.sleep(1.0)
 
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(100)
     plt.gca().set_aspect('equal')
     while not rospy.is_shutdown():
         # plt.plot(rtk.latitude, rtk.longitude, 'or')

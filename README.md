@@ -10,6 +10,8 @@ pip install pynmea2
 pip install canlib
 
 pip install keyboard==0.13.5
+
+sudo apt install ros-melodic-can-msgs
 ```
 
 fangxiangpan  1 and a half
