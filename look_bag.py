@@ -11,14 +11,23 @@ bag = rosbag.Bag(os.path.expanduser('~/dataset/agri/2023-03-12-16-43-43-rtk-loop
 bag_data = bag.read_messages(topics='/rtk_data')
 
 
-from rtk_driver.rtk_driver import GPStoXY
+# from rtk_driver.rtk_driver import GPStoXY
+from driver.projection import Projection
+projection = Projection()
+
+"""
+https://stackoverflow.com/questions/16266809/convert-from-latitude-longitude-to-x-y
+https://en.wikipedia.org/wiki/Equirectangular_projection
+"""
+
+
 
 
 times = []
 xs, ys = [], []
 speeds = []
 for data in bag_data:
-    x, y = GPStoXY(data.message.latitude, data.message.longitude)
+    x, y = projection.gps2xy(data.message.latitude, data.message.longitude)
     xs.append(x)
     ys.append(y)
     speeds.append(data.message.speed)
@@ -36,11 +45,11 @@ def fit_line(x, y):
     n = x.shape[0]
     ones = np.ones(n)
     # zeros = np.zeros(n)
-    A = np.stack([y, ones], axis=1)
-    b = x
+    A = np.stack([x, ones], axis=1)
+    b = y
     res = np.linalg.lstsq(A, b)
     # import pdb; pdb.set_trace()
-    dist = np.abs(-x + res[0][0]*y + res[0][1]) / np.sqrt(1 + res[0][0]**2)
+    dist = np.abs(res[0][0]*x -y + res[0][1]) / np.sqrt(1 + res[0][0]**2)
     return res[0], dist
 
 
@@ -61,15 +70,15 @@ x1, y1 = xs[1000:10000], ys[1000:10000]
 speeds1 = speeds[1000:10000]
 times1 = times[1000:10000]
 p1, dist1 = fit_line(x1, y1)   ### vertial line
-y1_line = y1
-x1_line = p1[0] * y1_line + p1[1]
+x1_line = x1
+y1_line = p1[0] * x1_line + p1[1]
 
 x2, y2 = xs[16000:-1000], ys[16000:-1000]
 speeds2 = speeds[16000:-1000]
 times2 = times[16000:-1000]
 p2, dist2 = fit_line(x2, y2)   ### vertial line
-y2_line = y2
-x2_line = p2[0] * y2_line + p2[1]
+x2_line = x2
+y2_line = p2[0] * x2_line + p2[1]
 
 
 
