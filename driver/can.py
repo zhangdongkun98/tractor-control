@@ -41,8 +41,8 @@ class CanDriver(object):
         self.cmd = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         self.flg = canlib.canMSG_EXT
 
-        self.send_channel = self.set_up_channel(channel=0)
-        # self.send_channel = PseudoChannel()
+        # self.send_channel = self.set_up_channel(channel=0)
+        self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
 
@@ -80,7 +80,7 @@ class CanDriver(object):
         self.set_query_mode()
 
         # self.activate_steer()
-        self.activate_gear()
+        # self.activate_gear()
 
         time.sleep(1.1)
         return
