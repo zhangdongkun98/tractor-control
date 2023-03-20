@@ -7,7 +7,7 @@ import rospy
 from driver.clock import Clock
 from driver.rtk import RTK
 from driver.can import CanDriver
-from kb_controller import KeyBoardController
+from driver.kb_controller import KeyBoardController
 
 
 
@@ -15,7 +15,7 @@ from kb_controller import KeyBoardController
 if __name__ == '__main__':
     rospy.init_node('driver', anonymous=False)
     rtk_driver = RTK()
-    can_driver = CanDriver()
+    can_driver = CanDriver(rospub=True)
 
 
     clock = Clock(100)
@@ -24,25 +24,43 @@ if __name__ == '__main__':
 
     try:
         
+        # can_driver.request_max_gear()
+        # import pdb; pdb.set_trace()
+
+        # can_driver.request_gear_enable()
+        # rospy.spin()
+
+        # can_driver.set_delta_gear( -1000 / can_driver.max_gear)
+        print('ewfeff')
+        rospy.spin()
         
         # while True:
         #     clock.tick_begin()
         #     deg = (time.time() - start_time) *30
         #     deg2 = np.sin(np.deg2rad(deg)) *50
-        #     print('deg: ', deg2)
-        #     can_driver.set_rotation(deg2)
-        #     # import pdb; pdb.set_trace()
+        #     # print('deg: ', deg2)
+            
+        #     # can_driver.set_rotation(deg2)
+
+        #     can_driver.set_gear(000 / can_driver.max_gear)
+        #     # can_driver.set_delta_gear( -1000 / can_driver.max_gear)
+        #     # can_driver.set_gear(0)
+
+        #     # can_driver.request_gear_enable()
+        #     import pdb; pdb.set_trace()
         #     clock.tick_end()
         
-        kb_controller = KeyBoardController(can_driver)
-        kb_controller.run()
+        # kb_controller = KeyBoardController(can_driver)
+        # kb_controller.run()
 
 
 
     except KeyboardInterrupt:
-        rtk_driver.stop_event()
         can_driver.stop_event()
+        rtk_driver.stop_event()
     finally:
-        rtk_driver.close()
+        can_driver.stop_event()
         can_driver.close()
+        rtk_driver.stop_event()
+        rtk_driver.close()
 

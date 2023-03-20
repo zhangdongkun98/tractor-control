@@ -37,7 +37,8 @@ class RTK(object):
         while not self.stop_recv.is_set():
             data = self.serial.readline()
             if data[:6] != b'$GPRMC':
-                raise NotImplementedError
+                continue
+                # raise NotImplementedError
 
             rmc = pynmea2.parse(data.decode('utf8'))
             msg_seq += 1
@@ -45,7 +46,6 @@ class RTK(object):
             ros_msg = GPSFix()
             ros_msg.header = Header()
             ros_msg.header.seq = msg_seq
-
             ros_msg.header.stamp = rospy.Time.from_sec(time.time())
 
             ros_msg.latitude = rmc.latitude
@@ -63,6 +63,6 @@ if __name__ == '__main__':
     rospy.init_node('rtk_driver', anonymous=False)
     rtk = RTK()
 
-    rate = rospy.Rate(1000)
+    rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         rate.sleep()
