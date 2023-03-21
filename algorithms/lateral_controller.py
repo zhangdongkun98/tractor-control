@@ -22,6 +22,9 @@ class LatRWPF(object):
     def set_global_path(self, global_path: cu.GlobalPath):
         self.global_path = global_path
 
+    def set_ref_traj(self, ref_traj):
+        return
+
 
     def select_action(self, state, ref_traj, time_step):
 

@@ -24,6 +24,10 @@ class MPCController():
     def set_global_path(self, global_path):
         self.global_path = global_path
 
+    def set_ref_traj(self, ref_traj):
+        self.tree = KDTree(ref_traj[:, :2])
+
+
 
     def select_action(self, state, ref_traj, time_step):
         u_cur, delta_u_cur = self.Solve(state, ref_traj, time_step)
@@ -35,8 +39,6 @@ class MPCController():
 
     def get_reference_x(self, state, ref_traj, t):
         x = state.pose
-        if not hasattr(self, 'tree'):
-            self.tree = KDTree(ref_traj[:, :2])
 
         ### path ref
         nearest_ref_info = self.tree.query(x[:2])

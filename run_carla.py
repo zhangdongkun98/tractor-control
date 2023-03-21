@@ -46,6 +46,8 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
     gp = agent.global_path
     method.set_global_path(gp)
     reference_trajectory = agent.get_reference_trajectory()
+    method.set_ref_traj(reference_trajectory)
+
 
     if config.visualize:
         fig = plt.figure(figsize=(18, 18))
