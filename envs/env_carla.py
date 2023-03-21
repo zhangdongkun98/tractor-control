@@ -319,6 +319,46 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
 
 
 
+
+    @torch.no_grad()
+    def _step_real(self, action):
+        self.clock_decision.tick_begin()
+        self.time_step += 1
+
+        ### state
+        state = self.state
+        ### reward
+        epoch_info = self._check_epoch()
+        reward = self.reward_function.run_step(state, action, self.agents_master, epoch_info)
+        epoch_done = epoch_info.done
+        
+        ### record
+        self.recorder.record_agents(self.time_step, self.agents_master, epoch_info)
+        self.recorder.record_experience(self.time_step, self.agents_master, action)
+        
+        ### callback
+        self.on_episode_step(reward, epoch_info)
+
+        ### step
+        self.agents_master.run_step(action)
+
+        ### next_state
+        next_state = self.agents_master.perception(self.step_reset, self.time_step)
+        self.state = copy.copy(next_state)
+
+        ### experience
+        reward = torch.tensor([reward], dtype=torch.float32)
+        done = torch.tensor([epoch_done], dtype=torch.float32)
+        experience = rldev.Data(
+            state=state, action=action, next_state=next_state, reward=reward,
+            done=done,
+        )
+        self.clock_decision.tick_end()
+        return experience, epoch_done, epoch_info
+
+
+
+
     def _check_epoch(self):
         '''check if collision, timeout, success, dones'''
         timeouts = [a.check_timeout(self.time_tolerance) for a in self.agents_master.agents]
@@ -332,6 +372,9 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
 
     @property
     def settings(self):
-        st = cu.default_settings(sync=True, render=True, dt=1/self.control_frequency)
+        if self.mode == 'real':
+            st = cu.default_settings(sync=False, render=True, dt=0.0)
+        else:
+            st = cu.default_settings(sync=True, render=True, dt=1/self.control_frequency)
         return st
 

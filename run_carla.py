@@ -22,6 +22,7 @@ def generate_argparser():
     argparser.add_argument('--seed', default=0, type=int, help='seed.')
     argparser.add_argument('--num-episodes', default=20000, type=int, help='number of episodes.')
     
+    argparser.add_argument('--real', action='store_true', help='')
     argparser.add_argument('--visualize', action='store_true', help='')
     
     argparser.add_argument('--evaluate', action='store_true', help='evaluate models (default: False)')
@@ -123,6 +124,8 @@ if __name__ == "__main__":
     if config.evaluate == True:
         mode = 'evaluate'
         config.seed += 1
+    if config.real:
+        mode = 'real'
     rldev.setup_seed(config.seed)
 
     ### tensorboard log
@@ -132,8 +135,8 @@ if __name__ == "__main__":
     env = init_env(config, writer, mode)
 
 
-    # from algorithms.mpc_linear import MPCController as Method
-    from algorithms.lateral_controller import LatRWPF as Method
+    from algorithms.mpc_linear import MPCController as Method
+    # from algorithms.lateral_controller import LatRWPF as Method
     L = cu.agents.tools.vehicle_wheelbase(rldev.BaseData(type_id=env.scenario.type_id))
     method = Method(L, 1/env.control_frequency)
 
