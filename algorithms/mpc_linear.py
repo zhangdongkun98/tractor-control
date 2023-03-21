@@ -26,7 +26,7 @@ class MPCController():
 
 
     def select_action(self, state, ref_traj, time_step):
-        u_cur, delta_u_cur = self.Solve(state.pose, ref_traj, time_step)
+        u_cur, delta_u_cur = self.Solve(state, ref_traj, time_step)
         u_ref = ref_traj[time_step][-2:]
         control = u_ref + u_cur
         print(f'[mpc] step {time_step}: control {control}')
@@ -46,10 +46,11 @@ class MPCController():
         # nearest_ref_x = ref_traj[t]
         return nearest_ref_x
 
-    def Solve(self, x, ref_traj, t=None):
+    def Solve(self, state, ref_traj, t=None):
+        x = state.pose
         u_pre = self.pre_u
 
-        nearest_ref_x = self.get_reference_x(x, ref_traj, t)
+        nearest_ref_x = self.get_reference_x(state, ref_traj, t)
 
 
         a = np.array([

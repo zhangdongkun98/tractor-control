@@ -62,7 +62,9 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
         # import pdb; pdb.set_trace()
 
         ### algorithm
+        t1 = time.time()
         action = method.select_action(state, reference_trajectory, env.time_step)
+        t2 = time.time()
         # action = env.action_space.sample()
         # action[:] = 1
 
@@ -85,6 +87,7 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
         target_state = cu.cvt.CuaState.carla_transform(target_waypoint.transform, v=current_state.v, k=curvature)
         longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
         error_paths.append(np.abs(lateral_e))
+        print(f'algorithm time: {t2-t1}, error path: {np.abs(lateral_e)}')
 
 
         ### env step
@@ -104,6 +107,8 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
     if config.visualize:
         ax.set_xlabel(metric_str)
         plt.show()
+    else:
+        import pdb; pdb.set_trace()
     return
 
 
