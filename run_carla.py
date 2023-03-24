@@ -49,6 +49,8 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
     reference_trajectory = agent.get_reference_trajectory()
     method.set_ref_traj(reference_trajectory)
 
+    start_time = time.time()
+
 
     if config.visualize:
         fig = plt.figure(figsize=(18, 18))
@@ -61,8 +63,9 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
 
     error_paths = []
     while True:
+        if config.real:
+            env.clock_decision.tick_begin()
         state = env.state
-        # import pdb; pdb.set_trace()
 
         ### algorithm
         t1 = time.time()
@@ -90,7 +93,15 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
         target_state = cu.cvt.CuaState.carla_transform(target_waypoint.transform, v=current_state.v, k=curvature)
         longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
         error_paths.append(np.abs(lateral_e))
-        print(f'algorithm time: {t2-t1}, error path: {np.abs(lateral_e)}')
+
+        if config.real:
+            current_time = time.time() - start_time
+        else:
+            current_time = env.time_step /  env.decision_frequency
+
+        # if current_time > 35:
+            # import pdb; pdb.set_trace()
+        print(f'current_time: {current_time}, algorithm time: {t2-t1}, error path: {np.abs(lateral_e)}')
 
 
         ### env step
@@ -101,6 +112,8 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method)
         if epoch_done == True:
             env.on_episode_end()
             break
+        if config.real:
+            env.clock_decision.tick_end()
     
     ### metric
     error_paths = np.array(error_paths)
@@ -137,6 +150,7 @@ if __name__ == "__main__":
 
     from algorithms.mpc_linear import MPCController as Method
     # from algorithms.lateral_controller import LatRWPF as Method
+    # from algorithms.lateral_controller import LatPID as Method
     L = cu.agents.tools.vehicle_wheelbase(rldev.BaseData(type_id=env.scenario.type_id))
     method = Method(L, 1/env.control_frequency)
 

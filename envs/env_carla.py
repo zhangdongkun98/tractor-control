@@ -2,9 +2,11 @@ import rldev
 import carla_utils as cu
 from carla_utils import carla
 from carla_utils import rl_template
+from carla_utils.agents import vehicle_model
 
 import copy
 import numpy as np
+from collections import deque
 import matplotlib.pyplot as plt
 import cv2
 import torch
@@ -109,6 +111,28 @@ class PerceptionImage(object):
 
 
 
+class SteerModel(vehicle_model.SteerModel):
+    def __init__(self, dt, alpha=0.95, delay=10):
+        self.dt = dt
+        self.xk, self.y = 0.0, 0.0
+        self.alpha = alpha
+        self.delay = delay
+        self.buffer = deque(maxlen=delay)
+        for _ in range(delay):
+            self.buffer.append(0.0)
+        return
+    
+    def forward(self, u):
+        """
+            u: normalized control
+        """
+        self.buffer.append(u)
+        self.y = self.xk
+        # alpha = np.clip(self.alpha + np.clip(np.random.normal(scale=0.2), -0.2, 0.2), 0, 1)
+        alpha = self.alpha
+        self.xk = alpha * self.xk + (1-alpha) * self.buffer[0]
+        return self.y    
+
 
 class AgentLongitudinalControl(cu.BaseAgent):
     dim_action = 1
@@ -152,6 +176,11 @@ class AgentLongitudinalControl(cu.BaseAgent):
 
 class AgentNoLearning(cu.BaseAgent):
     dim_action = 2
+
+    def __init__(self, config, vehicle, sensors_master, global_path):
+        super().__init__(config, vehicle, sensors_master, global_path)
+        self.steer_model = SteerModel(self.control_dt)
+
     def get_target(self, reference):
         target = reference
         return target
@@ -322,7 +351,6 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
 
     @torch.no_grad()
     def _step_real(self, action):
-        self.clock_decision.tick_begin()
         self.time_step += 1
 
         ### state
@@ -353,7 +381,6 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
             state=state, action=action, next_state=next_state, reward=reward,
             done=done,
         )
-        self.clock_decision.tick_end()
         return experience, epoch_done, epoch_info
 
 
