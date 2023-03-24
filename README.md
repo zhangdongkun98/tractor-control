@@ -75,3 +75,38 @@ up: 1.3
 
 1.17
 wheelbase 1.07
+
+
+
+
+
+### controller
+
+```
+
+rwfb:
+metric:  error path, max: 0.1227, min: 0.0, mean: 0.0043, last: 0.0001, ratio: 94.76 %
+
+rwfb real:
+metric:  error path, max: 0.1567, min: 0.0, mean: 0.0066, last: 0.0002, ratio: 92.08 %
+
+
+pid:
+metric:  error path, max: 0.1135, min: 0.0, mean: 0.0055, last: 0.0001, ratio: 91.32000000000001 %
+pid real:
+metric:  error path, max: 0.1392, min: 0.0, mean: 0.0116, last: 0.0111, ratio: 81.6 %
+
+
+pid new param, one-order delay 0.95:
+metric:  error path, max: 0.1174, min: 0.0, mean: 0.0057, last: 0.0001, ratio: 92.84 %
+
+pid new param, one-order delay 0.95, real:
+metric:  error path, max: 0.1659, min: 0.0, mean: 0.0089, last: 0.0002, ratio: 91.47999999999999 %
+
+pid new param, one-order delay 0.95, zero-order delay 10:
+metric:  error path, max: 0.3154, min: 0.0, mean: 0.0144, last: 0.0001, ratio: 89.44 %
+
+metric:  error path, max: 0.5259, min: 0.0, mean: 0.0506, last: 0.0476, ratio: 57.04 %
+```
+
+

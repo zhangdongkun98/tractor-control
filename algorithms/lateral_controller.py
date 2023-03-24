@@ -98,13 +98,24 @@ class LatPID(LatRWPF):
         self._dt = dt
         self.max_steer = np.deg2rad(45)
 
-        self._k_p = 0.58
-        self._k_i = 0.5
-        self._k_d = 0.02
-
         self._k_p = 0.5
-        self._k_i = 0.1  ## 0.0
-        self._k_d = 0.6
+        self._k_i = 5 * dt  ## 0.0
+        self._k_d = 0.01 / dt
+
+        lag = 0.4
+        delay = 0.2
+
+        Kp = (dt + delay/2) / (lag + delay/2)
+        Ki = dt + delay/2
+        Kd = dt * delay / (delay + 2*dt)
+        self._k_p = Kp
+        self._k_i = Ki * dt
+        self._k_d = Kd / dt
+        print(rldev.prefix(self) + f'PID parameter: Kp: {self._k_p}, Ki: {self._k_i}, Kd: {self._k_d}')
+
+        # self._k_p = 0.5
+        # self._k_i = 0.1  ## 0.0
+        # self._k_d = 0.6
 
         self._e_buffer = deque(maxlen=10)
         self.w_param = None

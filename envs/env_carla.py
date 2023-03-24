@@ -112,13 +112,18 @@ class PerceptionImage(object):
 
 
 class SteerModel(vehicle_model.SteerModel):
-    def __init__(self, dt, alpha=0.95, delay=10):
+    def __init__(self, dt, lag=0.4, delay=0.2):
+        """
+            lag, delay: second
+        """
         self.dt = dt
         self.xk, self.y = 0.0, 0.0
-        self.alpha = alpha
-        self.delay = delay
-        self.buffer = deque(maxlen=delay)
-        for _ in range(delay):
+
+        # https://controlsystemsacademy.com/0020/0020.html
+        self.alpha = np.exp(-dt/lag)
+        self.n = int(delay / dt)
+        self.buffer = deque(maxlen=self.n)
+        for _ in range(self.n):
             self.buffer.append(0.0)
         return
     
@@ -180,6 +185,7 @@ class AgentNoLearning(cu.BaseAgent):
     def __init__(self, config, vehicle, sensors_master, global_path):
         super().__init__(config, vehicle, sensors_master, global_path)
         self.steer_model = SteerModel(self.control_dt)
+        # self.steer_model.alpha = 0.95
 
     def get_target(self, reference):
         target = reference
