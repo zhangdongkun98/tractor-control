@@ -148,9 +148,9 @@ if __name__ == "__main__":
     env = init_env(config, writer, mode)
 
 
-    from algorithms.mpc_linear import MPCController as Method
+    # from algorithms.mpc_linear import MPCController as Method
     # from algorithms.lateral_controller import LatRWPF as Method
-    # from algorithms.lateral_controller import LatPID as Method
+    from algorithms.lateral_controller import LatPID as Method
     L = cu.agents.tools.vehicle_wheelbase(rldev.BaseData(type_id=env.scenario.type_id))
     method = Method(L, 1/env.control_frequency)
 
