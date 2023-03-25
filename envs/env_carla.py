@@ -20,20 +20,22 @@ sensors_param_list = [
         'transform': carla.Transform(carla.Location(x=2.5, z=0.7)),
     },
 
-    {
-        'type_id': 'sensor.camera.rgb',
-        'role_name': 'view',
-        'image_size_x': 640,
-        'image_size_y': 360,
-        'fov': 120,
-        'transform': carla.Transform(carla.Location(x=0, z=2.8), carla.Rotation(pitch=-5)),
-    },
+    # {
+    #     'type_id': 'sensor.camera.rgb',
+    #     'role_name': 'view',
+    #     'image_size_x': 640,
+    #     'image_size_y': 360,
+    #     'fov': 120,
+    #     'transform': carla.Transform(carla.Location(x=0, z=2.8), carla.Rotation(pitch=-5)),
+    # },
 ]
 
 
 
 SR = 0.02  ### sampling_resolution
 FREQ = 50  ### frequency
+LAG = 0.4
+DELAY = 0.2
 
 
 
@@ -184,7 +186,7 @@ class AgentNoLearning(cu.BaseAgent):
 
     def __init__(self, config, vehicle, sensors_master, global_path):
         super().__init__(config, vehicle, sensors_master, global_path)
-        self.steer_model = SteerModel(self.control_dt)
+        self.steer_model = SteerModel(self.control_dt, lag=LAG, delay=DELAY)
         # self.steer_model.alpha = 0.95
 
     def get_target(self, reference):
@@ -298,7 +300,7 @@ class AgentListMaster(cu.AgentListMaster):
 
 
 
-class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
+class EnvNoLearning(rl_template.EnvSingleAgent):
     scenario_cls = Scenario
     agents_master_cls = AgentListMaster
     recorder_cls = rl_template.PseudoRecorder
@@ -346,6 +348,8 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
         ### experience
         reward = torch.tensor([reward], dtype=torch.float32)
         done = torch.tensor([epoch_done], dtype=torch.float32)
+        if done == True:
+            self.on_episode_end()
         experience = rldev.Data(
             state=state, action=action, next_state=next_state, reward=reward,
             done=done,
@@ -383,6 +387,8 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
         ### experience
         reward = torch.tensor([reward], dtype=torch.float32)
         done = torch.tensor([epoch_done], dtype=torch.float32)
+        if done == True:
+            self.on_episode_end()
         experience = rldev.Data(
             state=state, action=action, next_state=next_state, reward=reward,
             done=done,
@@ -410,4 +416,6 @@ class EnvNoCrashBenchmark(rl_template.EnvSingleAgent):
         else:
             st = cu.default_settings(sync=True, render=True, dt=1/self.control_frequency)
         return st
+
+
 
