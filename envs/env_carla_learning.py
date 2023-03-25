@@ -1,27 +1,34 @@
 import rldev
 import carla_utils as cu
-from carla_utils import carla
-from carla_utils import rl_template
 
+import collections
 import numpy as np
 import torch
 
 
 from .env_carla import EnvNoLearning, SteerModel
-from .env_carla import LAG, DELAY
+from .env_carla import FREQ, LAG, DELAY, steer_model
 
 
 
 class Agent(cu.BaseAgent):
     dim_action = 2
+    num_horizon = 20
     def __init__(self, *args):
         super().__init__(*args)
-        # self.steer_model = SteerModel(self.control_dt, lag=LAG, delay=DELAY)
-        self.steer_model.alpha = 0.95
+        self.steer_model = steer_model
+        # self.steer_model.alpha = 0.95
+
+        assert self.num_horizon > int(DELAY * FREQ)
+        self.action_buffer = collections.deque(maxlen=self.num_horizon)
+        for _ in range(self.num_horizon):
+            self.action_buffer.append(np.zeros(self.dim_action, dtype=np.float32))
+        return
 
 
     def get_target(self, reference):
         ### curvature
+        self.action_buffer.append(reference.numpy())
         curvature = np.clip(reference[0].item(), -1,1) * self.max_curvature
         velocity = (np.clip(reference[1].item(), -1,1) + 1) * self.max_velocity /2
         target = (curvature, velocity)
@@ -45,7 +52,7 @@ class Agent(cu.BaseAgent):
 class AgentListMaster(cu.AgentListMaster):
     Agent = Agent
 
-    dim_state = 42
+    dim_state = 42 + Agent.dim_action * Agent.num_horizon
     dim_action = Agent.dim_action
 
     def __init__(self, config, **kwargs):
@@ -73,7 +80,14 @@ class AgentListMaster(cu.AgentListMaster):
         state = self.perp_gt_vehicle.run_step(agent, self.obstacles)
         route = self.perp_gt_route.run_step(agent)
         state.update(ref=route)
-        return torch.from_numpy(np.hstack([state.ref, state.ego, np.array([agent.steer_model.y], dtype=np.float32)])).unsqueeze(0)
+        history_action = list(agent.action_buffer)
+        return torch.from_numpy(
+            np.hstack([
+            state.ref,
+            state.ego,
+            np.array([agent.steer_model.y], dtype=np.float32),
+            np.stack(history_action).flatten(),
+        ])).unsqueeze(0)
 
 
 
@@ -158,11 +172,10 @@ class EnvLearning(EnvNoLearning):
             collision_type = agent.sensors_master.get(('sensor.other.collision', 'default')).get_data().other_actor.type_id
             if collision_type.startswith('static') or collision_type.startswith('traffic'):
                 collision_with_static = True
-                print('collision_type: ', collision_type)
 
         epoch_done = timeout | collision | collision_with_static | touch_boundary
         epoch_info = rldev.Data(done=epoch_done, t=timeout, c=collision, cs=collision_with_static, b=touch_boundary)
-        print('epoch_info: ', epoch_info)
+        # print('epoch_info: ', epoch_info)
         return epoch_info
 
 

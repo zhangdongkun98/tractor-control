@@ -32,11 +32,41 @@ sensors_param_list = [
 
 
 
+class SteerModel(vehicle_model.SteerModel):
+    def __init__(self, dt, lag=0.4, delay=0.2):
+        """
+            lag, delay: second
+        """
+        self.dt = dt
+        self.xk, self.y = 0.0, 0.0
+
+        # https://controlsystemsacademy.com/0020/0020.html
+        self.alpha = np.exp(-dt/lag)
+        self.n = int(delay / dt)
+        self.buffer = deque(maxlen=self.n)
+        for _ in range(self.n):
+            self.buffer.append(0.0)
+        return
+    
+    def forward(self, u):
+        """
+            u: normalized control
+        """
+        self.buffer.append(u)
+        self.y = self.xk
+        # alpha = np.clip(self.alpha + np.clip(np.random.normal(scale=0.2), -0.2, 0.2), 0, 1)
+        alpha = self.alpha
+        self.xk = alpha * self.xk + (1-alpha) * self.buffer[0]
+        return self.y    
+
+
+
+
 SR = 0.02  ### sampling_resolution
 FREQ = 50  ### frequency
 LAG = 0.4
 DELAY = 0.2
-
+steer_model = SteerModel(1/FREQ, LAG, DELAY)
 
 
 class ScenarioRandomization(rl_template.ScenarioRandomization):
@@ -113,33 +143,6 @@ class PerceptionImage(object):
 
 
 
-class SteerModel(vehicle_model.SteerModel):
-    def __init__(self, dt, lag=0.4, delay=0.2):
-        """
-            lag, delay: second
-        """
-        self.dt = dt
-        self.xk, self.y = 0.0, 0.0
-
-        # https://controlsystemsacademy.com/0020/0020.html
-        self.alpha = np.exp(-dt/lag)
-        self.n = int(delay / dt)
-        self.buffer = deque(maxlen=self.n)
-        for _ in range(self.n):
-            self.buffer.append(0.0)
-        return
-    
-    def forward(self, u):
-        """
-            u: normalized control
-        """
-        self.buffer.append(u)
-        self.y = self.xk
-        # alpha = np.clip(self.alpha + np.clip(np.random.normal(scale=0.2), -0.2, 0.2), 0, 1)
-        alpha = self.alpha
-        self.xk = alpha * self.xk + (1-alpha) * self.buffer[0]
-        return self.y    
-
 
 class AgentLongitudinalControl(cu.BaseAgent):
     dim_action = 1
@@ -186,7 +189,7 @@ class AgentNoLearning(cu.BaseAgent):
 
     def __init__(self, config, vehicle, sensors_master, global_path):
         super().__init__(config, vehicle, sensors_master, global_path)
-        self.steer_model = SteerModel(self.control_dt, lag=LAG, delay=DELAY)
+        self.steer_model = steer_model
         # self.steer_model.alpha = 0.95
 
     def get_target(self, reference):
