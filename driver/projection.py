@@ -24,3 +24,6 @@ class Projection(object):
         return x -self.x0, y -self.y0
 
 
+    def track2yaw(self, track):
+        return np.deg2rad(-track + 90)
+

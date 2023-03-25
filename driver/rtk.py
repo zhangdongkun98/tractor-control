@@ -18,6 +18,7 @@ class RTK(object):
         
         self.ros_pub = rospy.Publisher('/rtk_data', GPSFix, queue_size=1)
 
+        self.gps_data = None
         self.stop_recv = threading.Event()
         recv_thread = threading.Thread(target=self.read_serial)
         self.stop_recv.clear()
@@ -54,6 +55,7 @@ class RTK(object):
             ros_msg.speed = rmc.spd_over_grnd
             # print(ros_msg)
             # print('\n\n\n')
+            self.gps_data = ros_msg
             self.ros_pub.publish(ros_msg)
 
 
