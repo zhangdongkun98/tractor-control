@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import cv2
 import torch
 
+import rospy
+
 
 
 
@@ -39,7 +41,7 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
     start_time = time.time()
 
     error_paths = []
-    while True:
+    while not rospy.is_shutdown():
         state = env.state
 
         ### metric
@@ -72,7 +74,7 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
     metric_str = f'error path, max: {np.round(np.max(error_paths), 4)}, min: {np.round(np.min(error_paths), 4)}, mean: {np.round(np.mean(error_paths), 4)}, last: {np.round(error_paths[-1], 4)}, ratio: {ratio_path} %'
     print('metric: ', metric_str)
 
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     return
 
 
@@ -143,8 +145,9 @@ if __name__ == "__main__":
             run_one_episode = run_one_episode_no_learning
         else:
             run_one_episode = run_one_episode_no_learning
-        for _ in range(config.num_episodes):
-            run_one_episode_no_learning(config, env, method, learning)
+        run_one_episode(config, env, method, learning)
+    except KeyboardInterrupt:
+        env.stop()
     finally:
         writer.close()
         env.destroy()

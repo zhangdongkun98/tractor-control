@@ -7,7 +7,7 @@ import rospy
 from driver.clock import Clock
 from driver.rtk import RTK
 from driver.can import CanDriver
-from driver.kb_controller import KeyBoardController
+# from driver.kb_controller import KeyBoardController
 
 
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     can_driver = CanDriver(rospub=True)
 
 
-    clock = Clock(100)
+    clock = Clock(10)
 
     start_time = time.time()
 
@@ -31,11 +31,14 @@ if __name__ == '__main__':
         # rospy.spin()
 
         # can_driver.set_delta_gear( -1000 / can_driver.max_gear)
-        print('ewfeff')
-        rospy.spin()
+        # rospy.spin()
+
         
-        # while True:
-        #     clock.tick_begin()
+        while not rospy.is_shutdown():
+            clock.tick_begin()
+            print('recv_steer_wheel: ', can_driver.recv_steer_wheel)
+            print(f'steer_enable: {can_driver.steer_enable}')
+            print('\n')
         #     deg = (time.time() - start_time) *30
         #     deg2 = np.sin(np.deg2rad(deg)) *50
         #     # print('deg: ', deg2)
@@ -48,7 +51,7 @@ if __name__ == '__main__':
 
         #     # can_driver.request_gear_enable()
         #     import pdb; pdb.set_trace()
-        #     clock.tick_end()
+            clock.tick_end()
         
         # kb_controller = KeyBoardController(can_driver)
         # kb_controller.run()
@@ -60,7 +63,7 @@ if __name__ == '__main__':
         rtk_driver.stop_event()
     finally:
         can_driver.stop_event()
-        can_driver.close()
         rtk_driver.stop_event()
+        can_driver.close()
         rtk_driver.close()
 

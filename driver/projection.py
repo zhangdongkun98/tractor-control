@@ -1,3 +1,4 @@
+import rldev
 
 import math
 import numpy as np
@@ -25,5 +26,20 @@ class Projection(object):
 
 
     def track2yaw(self, track):
-        return np.deg2rad(-track + 90)
+        return rldev.pi2pi_numpy(np.deg2rad(-track + 90))
 
+
+
+    def wheel2steer(self, wheel):
+        """
+            wheel: deg
+        """
+        # wheel -= 158.8  ### ! warning: todo
+        return -np.deg2rad(wheel) * (30 / 360)
+
+
+    def steer2wheel(self, steer):
+        """
+            steer: rad
+        """
+        return -np.rad2deg(steer) * (360 / 30)

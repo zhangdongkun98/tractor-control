@@ -23,10 +23,7 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         can_driver.stop_event()
-        # rtk_driver.stop_event()
     finally:
         can_driver.stop_event()
         can_driver.close()
-        # rtk_driver.stop_event()
-        # rtk_driver.close()
 

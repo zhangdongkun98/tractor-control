@@ -1,5 +1,3 @@
- #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import rospy
 import serial
@@ -37,22 +35,37 @@ class RTK(object):
         msg_seq = 0
         while not self.stop_recv.is_set():
             data = self.serial.readline()
-            if data[:6] != b'$GPRMC':
-                continue
-                # raise NotImplementedError
 
-            rmc = pynmea2.parse(data.decode('utf8'))
+            if data[:6] != b'$GPCHC':
+                continue
+
+            # data_list = data.decode('utf8').split(',')
+            # print('data: ', data_list)
+            # lat = data_list[13 -1]
+            # lon = data_list[14 -1]
+
+            data_list = data.decode('utf8').split(',')
+            # print('[GPCHC] data: ', data_list)
+
+            lat = float(data_list[13 -1])
+            lon = float(data_list[14 -1])
+            heading = float(data_list[4 -1])
+            speed = float(data_list[19 -1])
+            # print('[GPCHC] speed: ', speed)
+            # print('\n')
+
             msg_seq += 1
+            # print('true course: ', rmc.true_course)
 
             ros_msg = GPSFix()
             ros_msg.header = Header()
             ros_msg.header.seq = msg_seq
             ros_msg.header.stamp = rospy.Time.from_sec(time.time())
 
-            ros_msg.latitude = rmc.latitude
-            ros_msg.longitude = rmc.longitude
-            ros_msg.track = rmc.true_course
-            ros_msg.speed = rmc.spd_over_grnd
+            ros_msg.latitude = lat
+            ros_msg.longitude = lon
+            ros_msg.track = heading
+            ros_msg.speed = speed
             # print(ros_msg)
             # print('\n\n\n')
             self.gps_data = ros_msg

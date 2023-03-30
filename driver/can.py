@@ -41,12 +41,13 @@ class CanDriver(object):
         self.cmd = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         self.flg = canlib.canMSG_EXT
 
-        # self.send_channel = self.set_up_channel(channel=0)
-        self.send_channel = PseudoChannel()
+        self.send_channel = self.set_up_channel(channel=0)
+        # self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
 
         ### data
+        self.steer_enable = 0
         self.gear_enable = 0
         self.max_gear = 20000
 
@@ -79,7 +80,7 @@ class CanDriver(object):
         # self.request_max_gear()
         self.set_query_mode()
 
-        # self.activate_steer()
+        self.activate_steer()
         # self.activate_gear()
 
         time.sleep(1.1)
@@ -105,7 +106,7 @@ class CanDriver(object):
         # self.stop_recv.set()
 
         self.stop_gear()
-        # self.deactivate_steer()
+        self.deactivate_steer()
         # self.deactivate_gear()
 
     def close(self):
@@ -148,9 +149,9 @@ class CanDriver(object):
                             value = - ((255-msg[4])*255+ (255-msg[5]))
                         else:
                             value = (msg[4])*255+ msg[5]
-                        print(value, msg[4], msg[5])
+                        # print(value, msg[4], msg[5])
 
-                        steer_wheel = value
+                        steer_wheel = value /10  ### deg
                         self.recv_steer_wheel_time = time.time()
                         self.recv_steer_wheel = steer_wheel
                         # steer_wheel = '0b' + str(msg[4]) + str(msg[5])
@@ -177,6 +178,13 @@ class CanDriver(object):
                     # if msg[0] == 0x81 and msg[1] == 0x03:
                     #     print('gear enable: ', msg[2])
 
+                    ### steer info
+                    if msg[0] == 0x82 and msg[1] == 0x01:
+                        steer_info = '0b' + format(msg[5], '#010b')[2:] + format(msg[4], '#010b')[2:] + format(msg[3], '#010b')[2:] + format(msg[2], '#010b')[2:]
+
+                        steer_enable = int(steer_info[-1- 0])
+                        self.steer_enable = int(not steer_enable)
+
                     ### gear info
                     if msg[0] == 0x82 and msg[1] == 0x02:
                         # ii = msg[2]*1000 + msg[3]*100 + msg[4]*10 + msg[5]
@@ -191,7 +199,6 @@ class CanDriver(object):
                         # gear_info = format(ii, '#034b')
                         # print('gear_info: ', gear_info[-1- 13], gear_info)
                         gear_enable = int(gear_info[-1- 13])
-
                         self.gear_enable = gear_enable
 
                         # print('gear enable loop: ', gear_enable, gear_info)
@@ -299,13 +306,23 @@ class CanDriver(object):
         msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         msg[0] = 0x00
         msg[1] = 0x01
-        self.send(msg)
+        print(rldev.prefix(self) + f'{msg}')
+        print(rldev.prefix(self) + 'activating steer')
+        while not self.steer_enable:
+            self.send(msg)
+            time.sleep(0.1)
+        print(rldev.prefix(self) + 'activated steer')
 
     def deactivate_steer(self):
         msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         msg[0] = 0x00
         msg[1] = 0x00
-        self.send(msg)
+        print(rldev.prefix(self) + f'{msg}')
+        print(rldev.prefix(self) + 'deactivating steer')
+        while self.steer_enable:
+            self.send(msg)
+            time.sleep(0.1)
+        print(rldev.prefix(self) + 'deactivated steer')
 
 
     def activate_gear(self):
@@ -353,7 +370,6 @@ class CanDriver(object):
         msg[3] = (gear >> 16) & 0xff#0x03
         msg[4] = (gear >> 8) & 0xff#0x00
         msg[5] = gear & 0xff#0x00
-        print(rldev.prefix(self) + str(msg))
         self.send(msg)
 
 
@@ -388,7 +404,6 @@ class CanDriver(object):
             steering wheel position increment
             [-90, 90] deg
         """
-        rotation_in
         msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         msg[0] = 0x02
         if rotation_in < 0:

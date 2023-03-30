@@ -40,10 +40,10 @@ class LatRWPF(object):
         steer = self.run_step(current_state, target_state, self.w_param)
 
         control = np.array([ref_traj[:,3].max(), steer])
-        print(rldev.prefix(self) + f'step {time_step}: control {control}, {current_state.v}')
-        print(f'current_state: {current_state}')
-        print(f'target_state: {target_state}')
-        print()
+        # print(rldev.prefix(self) + f'step {time_step}: control {control}, {current_state.v}')
+        # print(f'current_state: {current_state}')
+        # print(f'target_state: {target_state}')
+        # print()
         return np.expand_dims(control, axis=0)
 
 
@@ -173,9 +173,6 @@ class LatPID(LatRWPF):
         print('error angle: ', np.rad2deg(_dot))
         print('pid error: ', _dot, _ie, _de)
         print('pid: ', self._k_p * _dot, self._k_i * _ie, self._k_d * _de)
-
-        # if np.abs(_dot) > 1:
-        #     import pdb; pdb.set_trace()
 
         steer0 = np.arctan(kr * self.wheelbase)
         steer = steer0 + self._k_p * _dot + self._k_i * _ie + self._k_d * _de
