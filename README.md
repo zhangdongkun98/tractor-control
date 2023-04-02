@@ -10,6 +10,7 @@ pip install pynmea2
 pip install canlib
 
 pip install keyboard==0.13.5
+pip install pynput==1.7.6
 
 sudo apt install ros-melodic-can-msgs
 ```
