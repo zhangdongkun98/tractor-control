@@ -14,8 +14,8 @@ from driver.can import CanDriver
 
 if __name__ == '__main__':
     rospy.init_node('driver', anonymous=False)
-    rtk_driver = RTK()
-    # can_driver = CanDriver(rospub=True)
+    rtk_driver = RTK(rospub=True)
+    can_driver = CanDriver(rospub=True)
 
 
     clock = Clock(10)

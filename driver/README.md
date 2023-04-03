@@ -34,3 +34,37 @@
 
 
 2. 不带基站（wyk）
+
+
+# can
+
+
+```bash
+pip install canlib
+```
+
+**Install libcanlib.so**
+
+Download link: [Kvaser LINUX Driver and SDK Download](https://www.kvaser.com/downloads-kvaser/?utm_source=software&utm_ean=7330130980754&utm_status=latest) or [Intranet Download](http://10.12.120.70:5000/d/f/724877724816028007)
+```bash
+pip install canlib
+tar zxvf linuxcan.tar.gz
+cd linuxcan
+make -j16
+sudo make install
+```
+
+**Test canlib**
+```bash
+python driver/check_can.py
+```
+
+If not working, go to ```linuxcan```, unplug the device, and reinstall again
+```bash
+make -j16
+sudo make install
+```
+or check ```Secure Boot in BIOS is disable```
+
+
+

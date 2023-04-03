@@ -43,3 +43,6 @@ class Projection(object):
             steer: rad
         """
         return -np.rad2deg(steer) * (360 / 30)
+
+
+projection = Projection()

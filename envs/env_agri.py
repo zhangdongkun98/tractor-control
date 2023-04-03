@@ -85,7 +85,7 @@ class PseudoAgentNoLearning(AgentNoLearning):
         self.wheelbase = config.wheelbase
 
         self.long_pid = LongPID(1/FREQ)
-        self.rtk_driver = RTK()
+        self.rtk_driver = RTK(rospub=True)
         self.can_driver = CanDriver(rospub=True)
         return
 

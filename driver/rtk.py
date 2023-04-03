@@ -1,3 +1,4 @@
+import rldev
 
 import rospy
 import serial
@@ -5,16 +6,26 @@ import threading
 import time
 
 import pynmea2
-from std_msgs.msg import Header
+from std_msgs.msg import Header, String
 from gps_common.msg import GPSFix
+
+
+class PseudoPublisher(object):
+    def publish(self, msg):
+        return
 
 
 
 class RTK(object):
-    def __init__(self, port='/dev/ttyUSB0'):
+    def __init__(self, port='/dev/ttyUSB0', rospub=False):
         self.serial = serial.Serial(port, 230400)
         
-        self.ros_pub = rospy.Publisher('/rtk_data', GPSFix, queue_size=1)
+        if rospub:
+            self.publisher_rtk = rospy.Publisher('/rtk_data', GPSFix, queue_size=1)
+            self.publisher_rtk_full = rospy.Publisher('/rtk_data_full', String, queue_size=1)
+        else:
+            self.publisher_rtk = PseudoPublisher()
+            self.publisher_rtk_full = PseudoPublisher()
 
         self.gps_data = None
         self.stop_recv = threading.Event()
@@ -34,42 +45,44 @@ class RTK(object):
     def read_serial(self):
         msg_seq = 0
         while not self.stop_recv.is_set():
-            data = self.serial.readline()
+            line = self.serial.readline()
 
-            if data[:6] != b'$GPCHC':
+            if line[:6] != b'$GPCHC':
                 continue
-
-            # data_list = data.decode('utf8').split(',')
-            # print('data: ', data_list)
-            # lat = data_list[13 -1]
-            # lon = data_list[14 -1]
-
-            data_list = data.decode('utf8').split(',')
-            # print('[GPCHC] data: ', data_list)
-
-            lat = float(data_list[13 -1])
-            lon = float(data_list[14 -1])
-            heading = float(data_list[4 -1])
-            speed = float(data_list[19 -1])
-            # print('[GPCHC] speed: ', speed)
-            # print('\n')
-
             msg_seq += 1
-            # print('true course: ', rmc.true_course)
+
+            string = line.decode('utf8')
+            data = self.string2data(string)
 
             ros_msg = GPSFix()
             ros_msg.header = Header()
             ros_msg.header.seq = msg_seq
             ros_msg.header.stamp = rospy.Time.from_sec(time.time())
 
-            ros_msg.latitude = lat
-            ros_msg.longitude = lon
-            ros_msg.track = heading
-            ros_msg.speed = speed
+            ros_msg.latitude = data.lat
+            ros_msg.longitude = data.lon
+            ros_msg.track = data.heading
+            ros_msg.speed = data.speed
             # print(ros_msg)
             # print('\n\n\n')
             self.gps_data = ros_msg
-            self.ros_pub.publish(ros_msg)
+            self.publisher_rtk.publish(ros_msg)
+
+            full_data = String()
+            full_data.data = data.decode('utf8')
+            self.publisher_rtk_full.publish(full_data)
+
+
+    def string2data(self, string):
+        data_list = string.split(',')
+        # print('[GPCHC] data: ', data_list)
+
+        lat = float(data_list[13 -1])
+        lon = float(data_list[14 -1])
+        heading = float(data_list[4 -1])
+        speed = float(data_list[19 -1])
+        return rldev.BaseData(lat=lat, lon=lon, heading=heading, speed=speed)
+
 
 
 

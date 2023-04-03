@@ -33,7 +33,7 @@ class PseudoChannel(object):
 
 # Device: Kvaser leaf light 2xHS
 class CanDriver(object):
-    def __init__(self, rospub=False):
+    def __init__(self, rospub=False, gear_enable=True, steer_enable=True):
         self.send_freq = 100 # 5Hz 发送频率
         self.max_speed = 1000000
         self.msgId = 0x200 # 发的ID
@@ -80,7 +80,10 @@ class CanDriver(object):
         # self.request_max_gear()
         self.set_query_mode()
 
-        self.activate_steer()
+        if steer_enable:
+            self.activate_steer()
+        else:
+            self.deactivate_steer()
         self.activate_gear()
 
         time.sleep(1.1)

@@ -10,11 +10,9 @@ from driver.kb_controller import KeyBoardController
 
 
 if __name__ == '__main__':
-    can_driver = CanDriver(rospub=False)
-
+    can_driver = CanDriver(rospub=False, steer_enable=False)
 
     try:
-
         
         kb_controller = KeyBoardController(can_driver)
         kb_controller.run()
