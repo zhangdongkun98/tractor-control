@@ -81,7 +81,7 @@ class CanDriver(object):
         self.set_query_mode()
 
         self.activate_steer()
-        # self.activate_gear()
+        self.activate_gear()
 
         time.sleep(1.1)
         return
@@ -156,7 +156,7 @@ class CanDriver(object):
                         self.recv_steer_wheel = steer_wheel
                         # steer_wheel = '0b' + str(msg[4]) + str(msg[5])
                         # steer_wheel = int(steer_wheel, 2)
-                        # print('-----------------------------steer_wheel: ', steer_wheel)
+                        print('-----------------------------steer_wheel: ', steer_wheel)
                         # print('\n')
 
                         # if value > 0x00ff:
@@ -329,9 +329,11 @@ class CanDriver(object):
         msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         msg[0] = 0x09
         msg[1] = 0x01
+        print(rldev.prefix(self) + 'activating gear')
         while not self.gear_enable:
             self.send(msg)
             time.sleep(0.1)
+        print(rldev.prefix(self) + 'activated gear')
         return
 
     def deactivate_gear(self):

@@ -136,11 +136,40 @@ class PseudoAgentNoLearning(AgentNoLearning):
         control_gear = (control_gear + 1) *0.5
 
         ### apply
-        control_gear = 0
+        # control_gear = 0
         control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
         print('control: ', control_gear, control_steer)
         self.can_driver.set_gear(control_gear)
         self.can_driver.set_rotation(control_steer)
+
+
+
+def get_global_path():
+    # start_x, start_y = 6.058451788499951, -29.40062252106145
+    # start_x, start_y = 6.058451788499951, -29.40062252106145
+    # end_x, end_y = 6.058451788499951, 0.0
+    start_x, start_y = 8.0, -29.40062252106145
+    end_x, end_y = 8.0, 0.0
+    # 1.6, -25.6
+    start_x, start_y = 1.6, -25.7
+    end_x, end_y = -100, -25.7
+    start_x, start_y = -100, -25.7
+    end_x, end_yw = 1.6, -25.7
+
+    length = np.hypot(end_x-start_x, end_y-start_y)
+    theta = np.arctan2(end_y-start_y, end_x-start_x)
+    route = []
+    current_length = 0.0
+    while True:
+        if current_length > length:
+            break
+        x = start_x + current_length * np.cos(theta)
+        y = start_y + current_length * np.sin(theta)
+        wp = PseudoWaypoint(x, y, theta)
+        route.append((wp, RoadOption.LANEFOLLOW))
+        current_length += SR
+    global_path = cu.GlobalPath(route)
+    return global_path
 
 
 
@@ -174,22 +203,8 @@ class EnvAgri(EnvNoLearning):
         ### global path
         # start_x, start_y = projection.gps2xy(30.258824339333334, 119.72750057183333)
         # end_x, end_y = projection.gps2xy(30.2585985237, 119.726511246)
-        start_x, start_y = 6.058451788499951, -29.40062252106145
-        end_x, end_y = 6.058451788499951, 0.0
 
-        length = np.hypot(end_x-start_x, end_y-start_y)
-        theta = np.arctan2(end_y-start_y, end_x-start_x)
-        route = []
-        current_length = 0.0
-        while True:
-            if current_length > length:
-                break
-            x = start_x + current_length * np.cos(theta)
-            y = start_y + current_length * np.sin(theta)
-            wp = PseudoWaypoint(x, y, theta)
-            route.append((wp, RoadOption.LANEFOLLOW))
-            current_length += SR
-        global_path = cu.GlobalPath(route)
+        global_path = get_global_path()
 
         if self.learning:
             pass

@@ -15,7 +15,7 @@ from driver.can import CanDriver
 if __name__ == '__main__':
     rospy.init_node('driver', anonymous=False)
     rtk_driver = RTK()
-    can_driver = CanDriver(rospub=True)
+    # can_driver = CanDriver(rospub=True)
 
 
     clock = Clock(10)
@@ -36,9 +36,9 @@ if __name__ == '__main__':
         
         while not rospy.is_shutdown():
             clock.tick_begin()
-            print('recv_steer_wheel: ', can_driver.recv_steer_wheel)
-            print(f'steer_enable: {can_driver.steer_enable}')
-            print('\n')
+            # print('recv_steer_wheel: ', can_driver.recv_steer_wheel)
+            # print(f'steer_enable: {can_driver.steer_enable}')
+            # print('\n')
         #     deg = (time.time() - start_time) *30
         #     deg2 = np.sin(np.deg2rad(deg)) *50
         #     # print('deg: ', deg2)
