@@ -6,15 +6,31 @@ np.set_printoptions(precision=6, linewidth=65536, suppress=True, threshold=np.in
 
 import rospy
 import rosbag
+import pynmea2
 # bag = rosbag.Bag(os.path.expanduser('~/dataset/agri/2023-03-12-16-43-43-rtk-loop.bag'))
-bag = rosbag.Bag(os.path.expanduser('./results/bags/2023-03-19-18-01-52-rtk-can-circle.bag'))
+# bag = rosbag.Bag(os.path.expanduser('./results/bags/2023-03-19-18-01-52-rtk-can-circle.bag'))
+bag = rosbag.Bag(os.path.expanduser('~/save/2023-04-06-13-27-23-debug.bag'))
+
+from driver.rtk import RTK
+
+bag_data = bag.read_messages(topics='/rtk_data_full')
+
+for data in bag_data:
+    try:
+        print(data.message.data)
+        RTK.string2data(None, data.message.data)
+    except:
+        import traceback
+        traceback.print_exc()
+        import pdb; pdb.set_trace()
+exit()
+
 
 bag_data = bag.read_messages(topics='/rtk_data')
 
 
 # from rtk_driver.rtk_driver import GPStoXY
-from driver.projection import Projection
-projection = Projection()
+from driver.projection import projection
 
 """
 https://stackoverflow.com/questions/16266809/convert-from-latitude-longitude-to-x-y

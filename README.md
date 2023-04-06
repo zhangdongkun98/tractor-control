@@ -1,6 +1,6 @@
 # tractor-control
 
-### installation
+# installation
 
 ```bash
 conda activate capac
@@ -85,7 +85,47 @@ rosrun rviz rviz -d ~/github/zdk/tractor-control/envs/agri.rviz
 
 
 
-### controller
+
+
+
+# run
+
+## driver
+
+- run rtk only (with ROS publish)
+
+```bash
+python driver/rtk.py
+```
+
+- run imu only (with ROS publish)
+
+```bash
+python driver/imu.py
+```
+
+
+
+
+- run can with keyboard (without ROS publish)
+
+```bash
+python run_keyboard.py
+```
+
+
+
+- run rtk and can (with ROS publish)
+
+```bash
+python run_driver.py
+```
+
+
+
+
+
+# controller
 
 ```
 

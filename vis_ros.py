@@ -20,7 +20,7 @@ from gps_common.msg import GPSFix
 
 
 
-class RTK(object):
+class RTKSub(object):
     def __init__(self):
         # self.speed = 0.
         # self.yaw = 0.
@@ -75,7 +75,7 @@ class RTK(object):
 
 if __name__ == '__main__':
     rospy.init_node('vis')
-    rtk = RTK()
+    rtk = RTKSub()
     time.sleep(3.0)
 
     rate = rospy.Rate(100)
