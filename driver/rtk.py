@@ -69,7 +69,7 @@ class RTK(object):
             self.publisher_rtk.publish(ros_msg)
 
             full_data = String()
-            full_data.data = data.decode('utf8')
+            full_data.data = string
             self.publisher_rtk_full.publish(full_data)
 
 

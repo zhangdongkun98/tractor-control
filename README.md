@@ -79,6 +79,10 @@ wheelbase 1.07
 
 
 
+```bash
+rosrun rviz rviz -d ~/github/zdk/tractor-control/envs/agri.rviz
+```
+
 
 
 ### controller
