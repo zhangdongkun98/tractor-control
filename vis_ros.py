@@ -6,7 +6,7 @@ RoadOption = navigation.local_planner.RoadOption
 import time
 
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 from driver.projection import projection
 from driver.rtk import RTK
@@ -83,6 +83,7 @@ if __name__ == '__main__':
     # plt.gca().set_aspect('equal')
 
     gp = get_global_path()
+    plt.plot(gp.x, gp.y, 'ob')
 
     header = ru.cvt.header('map', time.time())
     rtk.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, gp) )
@@ -90,6 +91,8 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
         rtk.run_step()
+        line = plt.plot(rtk.x, rtk.y, 'or')[0]
+        plt.pause(0.001)
 
         rate.sleep()
 

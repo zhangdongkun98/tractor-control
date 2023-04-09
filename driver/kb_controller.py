@@ -43,19 +43,19 @@ class KeyBoardController(object):
             print(f'right {self.rotation_deg}')
             self.driver.set_rotation(self.rotation_deg)
 
-        if hasattr(key, 'char') and key.char == 'w':
-            print(f'press up')
-            self.driver.set_delta_gear( 500 / self.driver.max_gear )
-            print('finish up')
-        if hasattr(key, 'char') and key.char == 's':
-            print(f'down')
-            self.driver.set_delta_gear( -500 / self.driver.max_gear )
-        if hasattr(key, 'char') and key.char == 'a':
-            print(f'left {self.rotation_deg}')
-            self.driver.set_rotation(-self.rotation_deg)
-        if hasattr(key, 'char') and key.char == 'd':
-            print(f'right {self.rotation_deg}')
-            self.driver.set_rotation(self.rotation_deg)
+        # if hasattr(key, 'char') and key.char == 'w':
+        #     print(f'press up')
+        #     self.driver.set_delta_gear( 500 / self.driver.max_gear )
+        #     print('finish up')
+        # if hasattr(key, 'char') and key.char == 's':
+        #     print(f'down')
+        #     self.driver.set_delta_gear( -500 / self.driver.max_gear )
+        # if hasattr(key, 'char') and key.char == 'a':
+        #     print(f'left {self.rotation_deg}')
+        #     self.driver.set_rotation(-self.rotation_deg)
+        # if hasattr(key, 'char') and key.char == 'd':
+        #     print(f'right {self.rotation_deg}')
+        #     self.driver.set_rotation(self.rotation_deg)
 
         if key == keyboard.Key.esc:
             self.stop_listen.set()

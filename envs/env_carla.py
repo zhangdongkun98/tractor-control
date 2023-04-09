@@ -64,8 +64,11 @@ class SteerModel(vehicle_model.SteerModel):
 
 SR = 0.02  ### sampling_resolution
 FREQ = 50  ### frequency
-LAG = 0.4
-DELAY = 0.2
+# DELAY = 0.2
+# LAG = 0.4
+DELAY = 0.24165010452270508
+LAG = 0.7157812540648414
+
 steer_model = SteerModel(1/FREQ, LAG, DELAY)
 
 

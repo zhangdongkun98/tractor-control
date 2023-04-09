@@ -35,6 +35,7 @@ class Projection(object):
             wheel: deg
         """
         # wheel -= 158.8  ### ! warning: todo
+        # return np.deg2rad(wheel) * (30 / 360)
         return -np.deg2rad(wheel) * (30 / 360)
 
 
@@ -42,6 +43,7 @@ class Projection(object):
         """
             steer: rad
         """
+        # return np.rad2deg(steer) * (360 / 30)
         return -np.rad2deg(steer) * (360 / 30)
 
 

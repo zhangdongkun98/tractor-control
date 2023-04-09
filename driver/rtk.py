@@ -114,7 +114,7 @@ class RTK(object):
         time_week = float(data_list[2-1])
         time_sec = float(data_list[3-1])
         current_time = gps2time(time_week, time_sec)
-        print('current_time: ', current_time)
+        # print('current_time: ', current_time)
 
         lat = float(data_list[13 -1])
         lon = float(data_list[14 -1])

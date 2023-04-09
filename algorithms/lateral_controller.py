@@ -102,8 +102,9 @@ class LatPID(LatRWPF):
         self._k_i = 5 * dt  ## 0.0
         self._k_d = 0.01 / dt
 
-        lag = 0.4
-        delay = 0.2
+        from .params import DELAY, LAG
+        lag = LAG
+        delay = DELAY
 
         Kp = (dt + delay/2) / (lag + delay/2)
         Ki = dt + delay/2
@@ -111,6 +112,10 @@ class LatPID(LatRWPF):
         self._k_p = Kp
         self._k_i = Ki * dt
         self._k_d = Kd / dt
+        # self._k_d = Kd / dt /3
+        # self._k_i = 0.0
+        # self._k_d = 0.0
+        print(rldev.prefix(self) + f'PID parameter c: Kp: {Kp}, Ki: {Ki}, Kd: {Kd}')
         print(rldev.prefix(self) + f'PID parameter: Kp: {self._k_p}, Ki: {self._k_i}, Kd: {self._k_d}')
 
         # self._k_p = 0.5
@@ -154,7 +159,7 @@ class LatPID(LatRWPF):
             _dot *= -1.0
 
         longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
-        _dot = lateral_e
+        _dot = lateral_e *10
 
         kr = target_state.k
 
@@ -170,7 +175,7 @@ class LatPID(LatRWPF):
 
         print('\n')
         print('angle: ', np.rad2deg(current_state.theta), np.rad2deg(np.arctan2(target_state.y - current_state.y, target_state.x - current_state.x)))
-        print('error angle: ', np.rad2deg(_dot))
+        print('error (m): ', lateral_e)
         print('pid error: ', _dot, _ie, _de)
         print('pid: ', self._k_p * _dot, self._k_i * _ie, self._k_d * _de)
 

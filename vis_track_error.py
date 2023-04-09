@@ -27,10 +27,10 @@ def generate_args():
 
 if __name__ == '__main__':
     args = generate_args()
-    import rospy
-    rospy.init_node('test')
-    rtk = RTK(rospub=True)
-    # rtk = RTK()
+    # import rospy
+    # rospy.init_node('test')
+    # rtk = RTK(rospub=True)
+    rtk = RTK()
     time.sleep(3.0)
 
     clock = cu.system.Clock(100)

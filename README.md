@@ -85,6 +85,8 @@ rosrun rviz rviz -d ~/github/zdk/tractor-control/envs/agri.rviz
 
 
 
+dead zone: -12.0  19.0
+
 
 
 

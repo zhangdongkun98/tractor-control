@@ -426,3 +426,18 @@ class CanDriver(object):
         self.send(msg)
 
 
+
+
+class PseudoCanDriver(CanDriver):
+    def __init__(self, rospub=False, gear_enable=True, steer_enable=False):
+        super().__init__(rospub, gear_enable=False, steer_enable=False)
+
+
+    def set_gear(self, gear):
+        return
+
+    def set_delta_gear(self, gear):
+        return
+    
+    def set_rotation(self, rotation_in):
+        return

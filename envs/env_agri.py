@@ -13,7 +13,7 @@ from gps_common.msg import GPSFix
 from driver.clock import Clock
 from driver.projection import Projection
 from driver.rtk import RTK
-from driver.can import CanDriver
+from driver.can import CanDriver, PseudoCanDriver
 
 from .env_carla import SR, FREQ
 from .env_carla import EnvNoLearning, AgentNoLearning
@@ -86,7 +86,10 @@ class PseudoAgentNoLearning(AgentNoLearning):
 
         self.long_pid = LongPID(1/FREQ)
         self.rtk_driver = RTK(rospub=True)
-        self.can_driver = CanDriver(rospub=True)
+        if config.pseudo:
+            self.can_driver = PseudoCanDriver()
+        else:
+            self.can_driver = CanDriver(rospub=True)
         return
 
     def stop(self):
@@ -130,15 +133,19 @@ class PseudoAgentNoLearning(AgentNoLearning):
 
         ### steer
         control_delta_steer = steer - current_steer
-        print('action steer: ', np.rad2deg(steer), np.rad2deg(current_steer), np.rad2deg(control_delta_steer))
+        print(f'[steers, rad] target: {steer}, currrent: {current_steer}', np.rad2deg(control_delta_steer))
 
         control_gear = self.long_pid.run_step(current_state.v, vr)
+        print('speed: ', current_state.v, vr)
         control_gear = (control_gear + 1) *0.5
+        ### open loop
+        control_gear = 0.4
 
         ### apply
         # control_gear = 0
-        control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
-        print('control: ', control_gear, control_steer)
+        # control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
+        control_steer = np.clip(projection.steer2wheel(control_delta_steer) -3.5, -90, 90)
+        print(f'[control] gear: {control_gear}, steer: {control_steer}')
         self.can_driver.set_gear(control_gear)
         self.can_driver.set_rotation(control_steer)
 
@@ -153,8 +160,8 @@ def get_global_path():
     # 1.6, -25.6
     start_x, start_y = 1.6, -25.7
     end_x, end_y = -100, -25.7
-    start_x, start_y = -100, -25.7
-    end_x, end_yw = 1.6, -25.7
+    start_x, start_y = 1.6, -29.
+    end_x, end_y = -100, -29.
 
     length = np.hypot(end_x-start_x, end_y-start_y)
     theta = np.arctan2(end_y-start_y, end_x-start_x)

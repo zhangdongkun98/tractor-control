@@ -87,6 +87,7 @@ if __name__ == "__main__":
     from scripts.args import generate_argparser
     argparser = generate_argparser()
     argparser.add_argument('algo', help='Algo.')
+    argparser.add_argument('--pseudo', action='store_true', help='Pseudo Control')
     args = argparser.parse_args()
     config.update(args)
 
