@@ -13,7 +13,9 @@ import torch
 
 import rospy
 
+from envs.metric import calculate_metric
 
+error_paths = []
 
 
 def init_env(config, writer, mode, learning):
@@ -25,10 +27,11 @@ def init_env(config, writer, mode, learning):
     return env
 
 
-import matplotlib.pyplot as plt
-
 
 def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method, learning):
+    global error_paths
+    error_paths.clear()
+    
     env.reset()
 
     agent = env.agent
@@ -40,7 +43,6 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
 
     start_time = time.time()
 
-    error_paths = []
     while not rospy.is_shutdown():
         state = env.state
 
@@ -69,9 +71,7 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
             break
     
     ### metric
-    error_paths = np.array(error_paths)
-    ratio_path = (np.where(error_paths <= 0.02, 1, 0).sum() / error_paths.shape[0]) *100
-    metric_str = f'error path, max: {np.round(np.max(error_paths), 4)}, min: {np.round(np.min(error_paths), 4)}, mean: {np.round(np.mean(error_paths), 4)}, last: {np.round(error_paths[-1], 4)}, ratio: {ratio_path} %'
+    metric_str = calculate_metric(np.array(error_paths))
     print('metric: ', metric_str)
 
     # import pdb; pdb.set_trace()
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         env = init_env(config, writer, mode, learning)
         L = env.wheelbase
         from algorithms.lateral_controller import LatPID as Method
-        method = Method(L, 1/env.control_frequency)
+        method = Method(L, 1/env.control_frequency, scale=10)
     
 
     elif algo == 'td3':
@@ -150,5 +150,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         env.stop()
     finally:
+        print('\n\n\n\n\n\n')
+        metric_str, _ = calculate_metric(np.array(error_paths))
+        print('metric: ', metric_str)
         writer.close()
         env.destroy()

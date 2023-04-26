@@ -5,14 +5,14 @@ from carla_utils import rl_template
 
 import os
 import time
-import copy
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import torch
 
 
+from envs.metric import calculate_metric
 
+error_paths = []
 
 def init_env(config, writer, mode, learning):
     if learning:
@@ -25,10 +25,11 @@ def init_env(config, writer, mode, learning):
     return env
 
 
-import matplotlib.pyplot as plt
-
 
 def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method, learning):
+    global error_paths
+    error_paths.clear()
+
     env.reset()
 
     agent = env.agents_master.agents[0]
@@ -50,7 +51,6 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
         line_current = None
         line_ref = None
 
-    error_paths = []
     while True:
         if config.real:
             env.clock_decision.tick_begin()
@@ -107,9 +107,7 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
             env.clock_decision.tick_end()
     
     ### metric
-    error_paths = np.array(error_paths)
-    ratio_path = (np.where(error_paths <= 0.02, 1, 0).sum() / error_paths.shape[0]) *100
-    metric_str = f'error path, max: {np.round(np.max(error_paths), 4)}, min: {np.round(np.min(error_paths), 4)}, mean: {np.round(np.mean(error_paths), 4)}, last: {np.round(error_paths[-1], 4)}, ratio: {ratio_path} %'
+    metric_str = calculate_metric(np.array(error_paths))
     print('metric: ', metric_str)
     if config.visualize:
         ax.set_xlabel(metric_str)
@@ -285,5 +283,8 @@ if __name__ == "__main__":
         for _ in range(config.num_episodes):
             run_one_episode_no_learning(config, env, method, learning)
     finally:
+        print('\n\n\n\n\n\n')
+        metric_str, _ = calculate_metric(np.array(error_paths))
+        print('metric: ', metric_str)
         writer.close()
         env.destroy()

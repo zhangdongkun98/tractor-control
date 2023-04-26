@@ -105,18 +105,18 @@ class Scenario(rl_template.ScenarioSingleAgent):
         return scenario_randomization
 
 
-    # def register_agents(self, step_reset, agents_master: cu.AgentListMaster, sensors_params):
-    #     res = super().register_agents(step_reset, agents_master, sensors_params)
-    #     ### add random lateral offset
-    #     d = random.uniform(-0.5, 0.5)
-    #     agent = agents_master.agents[0]
-    #     t = agent.get_transform()
-    #     theta = np.deg2rad(t.rotation.yaw)
-    #     l = t.location
-    #     new_l = l + carla.Vector3D(d * np.cos(theta + np.pi/2), d * np.sin(theta + np.pi/2), 0.0)
-    #     new_t = carla.Transform(new_l, t.rotation)
-    #     agent.vehicle.set_transform(new_t)
-    #     return res
+    def register_agents(self, step_reset, agents_master: cu.AgentListMaster, sensors_params):
+        res = super().register_agents(step_reset, agents_master, sensors_params)
+        ### add random lateral offset
+        d = random.uniform(-0.5, 0.5)
+        agent = agents_master.agents[0]
+        t = agent.get_transform()
+        theta = np.deg2rad(t.rotation.yaw)
+        l = t.location
+        new_l = l + carla.Vector3D(d * np.cos(theta + np.pi/2), d * np.sin(theta + np.pi/2), 0.0)
+        new_t = carla.Transform(new_l, t.rotation)
+        agent.vehicle.set_transform(new_t)
+        return res
 
 
 

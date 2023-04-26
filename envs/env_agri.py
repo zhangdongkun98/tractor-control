@@ -151,7 +151,7 @@ class PseudoAgentNoLearning(AgentNoLearning):
 
 
 
-def get_global_path():
+def get_global_path_fix():
     # start_x, start_y = 6.058451788499951, -29.40062252106145
     # start_x, start_y = 6.058451788499951, -29.40062252106145
     # end_x, end_y = 6.058451788499951, 0.0
@@ -177,6 +177,34 @@ def get_global_path():
         current_length += SR
     global_path = cu.GlobalPath(route)
     return global_path
+
+
+
+def get_global_path(x0, y0, theta0):  ### todo: check
+    theta0 = rldev.pi2pi(theta0)
+
+    start_x, start_y = x0, y0
+    if theta0 < np.deg2rad(90) and theta0 > -np.deg2rad(90):
+        theta = 0.0
+    else:
+        theta = np.pi
+    length = 100
+
+    route = []
+    current_length = 0.0
+    while True:
+        if current_length > length:
+            break
+        x = start_x + current_length * np.cos(theta)
+        y = start_y + current_length * np.sin(theta)
+        wp = PseudoWaypoint(x, y, theta)
+        route.append((wp, RoadOption.LANEFOLLOW))
+        current_length += SR
+    global_path = cu.GlobalPath(route)
+    return global_path
+
+
+
 
 
 

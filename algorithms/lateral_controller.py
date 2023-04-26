@@ -78,29 +78,15 @@ class LatRWPF(object):
 
 
 class LatPID(LatRWPF):
-    """
-    PIDLateralController implements lateral control using a PID.
-    """
-
-    def __init__(self, wheelbase, dt):
-        """
-        Constructor method.
-
-            :param vehicle: actor to apply to local planner logic onto
-            :param offset: distance to the center line. If might cause issues if the value
-                is large enough to make the vehicle invade other lanes.
-            :param K_P: Proportional term
-            :param K_D: Differential term
-            :param K_I: Integral term
-            :param dt: time differential in seconds
-        """
+    def __init__(self, wheelbase, dt, scale=1.0):
         self.wheelbase = wheelbase
         self._dt = dt
+        self.scale = scale
         self.max_steer = np.deg2rad(45)
 
-        self._k_p = 0.5
-        self._k_i = 5 * dt  ## 0.0
-        self._k_d = 0.01 / dt
+        self.Kp = 0.5
+        self.Ki = 5 * dt  ## 0.0
+        self.Kd = 0.01 / dt
 
         from .params import DELAY, LAG
         lag = LAG
@@ -109,77 +95,42 @@ class LatPID(LatRWPF):
         Kp = (dt + delay/2) / (lag + delay/2)
         Ki = dt + delay/2
         Kd = dt * delay / (delay + 2*dt)
-        self._k_p = Kp
-        self._k_i = Ki * dt
-        self._k_d = Kd / dt
-        # self._k_d = Kd / dt /3
-        # self._k_i = 0.0
-        # self._k_d = 0.0
+        self.Kp = Kp
+        self.Ki = Ki * dt
+        self.Kd = Kd / dt *50
+        # self.Kd = Kd / dt *100
+        # self.Kd = Kd / dt /3
+        # self.Ki = 0.0
+        # self.Kd = 0.0
+
+        # self.Kp = 0.2
+        # self.Ki = Ki * dt *0
+        # self.Kd = 0.1
+
         print(rldev.prefix(self) + f'PID parameter c: Kp: {Kp}, Ki: {Ki}, Kd: {Kd}')
-        print(rldev.prefix(self) + f'PID parameter: Kp: {self._k_p}, Ki: {self._k_i}, Kd: {self._k_d}')
+        print(rldev.prefix(self) + f'PID parameter: Kp: {self.Kp}, Ki: {self.Ki}, Kd: {self.Kd}')
 
-        # self._k_p = 0.5
-        # self._k_i = 0.1  ## 0.0
-        # self._k_d = 0.6
+        self.e_buffer = deque([0.0], maxlen=10)
 
-        self._e_buffer = deque(maxlen=10)
         self.w_param = None
 
     def run_step(self, current_state, target_state, param):
-        """
-        Execute one step of lateral control to steer
-        the vehicle towards a certain waypoin.
-
-            :param waypoint: target waypoint
-            :return: steering control in the range [-1, 1] where:
-            -1 maximum steering to left
-            +1 maximum steering to right
-        """
-        """
-        Estimate the steering angle of the vehicle based on the PID equations
-
-            :param waypoint: target waypoint
-            :param vehicle_transform: current transform of the vehicle
-            :return: steering control in the range [-1, 1]
-        """
-        # Get the ego's location and forward vector
-        v_vec = np.array([np.cos(current_state.theta), np.sin(current_state.theta), 0.0])
-
-        # Get the vector vehicle-target_wp
-
-
-        w_vec = np.array([target_state.x - current_state.x,
-                          target_state.y - current_state.y,
-                          0.0])
-        w_vec /= np.linalg.norm(w_vec)
-
-        _dot = np.arccos(np.clip(np.dot(w_vec, v_vec) / (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
-        _cross = np.cross(v_vec, w_vec)
-        if _cross[2] < 0:
-            _dot *= -1.0
-
         longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
-        _dot = lateral_e *10
+        error = lateral_e *self.scale
 
         kr = target_state.k
-
-
-        self._e_buffer.append(_dot)
-        if len(self._e_buffer) >= 2:
-            _de = (self._e_buffer[-1] - self._e_buffer[-2]) / self._dt
-            _ie = sum(self._e_buffer) * self._dt
-        else:
-            _de = 0.0
-            _ie = 0.0
-
-
-        print('\n')
-        print('angle: ', np.rad2deg(current_state.theta), np.rad2deg(np.arctan2(target_state.y - current_state.y, target_state.x - current_state.x)))
-        print('error (m): ', lateral_e)
-        print('pid error: ', _dot, _ie, _de)
-        print('pid: ', self._k_p * _dot, self._k_i * _ie, self._k_d * _de)
-
         steer0 = np.arctan(kr * self.wheelbase)
-        steer = steer0 + self._k_p * _dot + self._k_i * _ie + self._k_d * _de
+
+
+        error_i = sum(self.e_buffer) + error
+        error_d = error - self.e_buffer[-1]
+        self.e_buffer.append(error)
+
+        steer = steer0 + self.Kp * error + self.Ki * error_i + self.Kd * error_d
+        print('\n')
+        print('error (m): ', lateral_e)
+        print('pid error: ', error, error_i, error_d)
+        print(f'pid [{steer}]: ', self.Kp * error, self.Ki * error_i, self.Kd * error_d)
+
         return np.clip(steer, -1.0, 1.0) *self.max_steer
 
