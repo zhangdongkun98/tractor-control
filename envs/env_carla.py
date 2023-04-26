@@ -6,6 +6,7 @@ from carla_utils.agents import vehicle_model
 
 import copy
 import numpy as np
+import random
 from collections import deque
 import matplotlib.pyplot as plt
 import cv2
@@ -102,6 +103,22 @@ class Scenario(rl_template.ScenarioSingleAgent):
         total_distance = self.time_tolerance / self.config.control_frequency * self.max_velocity
         scenario_randomization = ScenarioRandomization(self.core, self.spawn_points, self.num_vehicles, total_distance)
         return scenario_randomization
+
+
+    # def register_agents(self, step_reset, agents_master: cu.AgentListMaster, sensors_params):
+    #     res = super().register_agents(step_reset, agents_master, sensors_params)
+    #     ### add random lateral offset
+    #     d = random.uniform(-0.5, 0.5)
+    #     agent = agents_master.agents[0]
+    #     t = agent.get_transform()
+    #     theta = np.deg2rad(t.rotation.yaw)
+    #     l = t.location
+    #     new_l = l + carla.Vector3D(d * np.cos(theta + np.pi/2), d * np.sin(theta + np.pi/2), 0.0)
+    #     new_t = carla.Transform(new_l, t.rotation)
+    #     agent.vehicle.set_transform(new_t)
+    #     return res
+
+
 
 
 

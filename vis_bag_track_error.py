@@ -28,20 +28,28 @@ https://en.wikipedia.org/wiki/Equirectangular_projection
 
 times = []
 xs, ys = [], []
+thetas = []
 speeds = []
 for data in bag_data:
     x, y = projection.gps2xy(data.message.latitude, data.message.longitude)
+    theta = projection.track2yaw(data.message.track)
     xs.append(x)
     ys.append(y)
+    thetas.append(theta)
     speeds.append(data.message.speed)
     times.append(rospy.Time.to_sec(data.message.header.stamp))
 
 
 xs = np.array(xs)
 ys = np.array(ys)
+thetas = np.array(thetas)
 times = np.array(times)
 
-# import pdb; pdb.set_trace()
+wheelbase = 1.07
+
+xs -= wheelbase * np.cos(thetas)
+ys -= wheelbase * np.sin(thetas)
+
 
 
 def fit_line(x, y):
@@ -62,8 +70,8 @@ def fit_line(x, y):
 def calculate_metric(error_paths, metric=0.025):
     ratio_path = (np.where(error_paths <= metric, 1, 0).sum() / error_paths.shape[0]) *100
     metric_str = f'error mean: {np.round(np.mean(error_paths), 4)}, ratio: {np.round(ratio_path, 4)} %'
-    ax.set_xlabel(metric_str, fontsize=15)
     print(metric_str)
+    return metric_str, np.round(ratio_path, 4)
 
 
 
@@ -78,22 +86,32 @@ def visualize_data(ax, x, y, x_line, y_line, dist):
 
 
 
-
+### before
 gp = get_global_path()
+error_paths = []
 
+xs = xs[1500:-500]
+ys = ys[1500:-500]
 
 from carla_utils import carla
 for x, y in zip(xs, ys):
     l = carla.Location(x=x, y=y)
-    t = carla.Transform(location=l)
+    current_transform = carla.Transform(location=l)
 
 
     _, lateral_e, theta_e = gp.error(current_transform)
+    error_paths.append(np.abs(lateral_e))
 
+error_paths = np.array(error_paths)
+_, metric_ref = calculate_metric(error_paths, metric=0.025)
 
-longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
+### after
+param, error_paths = fit_line(xs, ys)   ### vertial line
 
+x_line = xs
+y_line = param[0] * x_line + param[1]
 
+_, metric_fit = calculate_metric(error_paths, metric=0.025)
 
 
 
@@ -103,8 +121,15 @@ import matplotlib.pyplot as plt
 fig = plt.figure(figsize=(30,16), dpi=100)
 ax = fig.subplots(1, 1)
 
-ax.plot(gp.x[:100], gp.y[:100], 'ob')
+ax.plot(gp.x, gp.y, 'ob')
+ax.plot(x_line, y_line, 'oy')
+ax.plot(gp.x[0], gp.y[0], 'oy')
 ax.plot(xs, ys, 'or')
+ax.plot(xs[0], ys[0], 'og')
+ax.set_title(f'[metric] ref line: {metric_ref} %, fit line: {metric_fit} %', fontsize=15)
+ax.set_xlabel('x (m)', fontsize=15)
+ax.set_ylabel('y (m)', fontsize=15)
+# ax.set_xlabel(metric_str, fontsize=15)
 # ax.plot(x1_line, y1_line, '-b')
 # ax.plot(x2_line, y2_line, '-b')
 # ax.set_aspect('equal', adjustable='box')
