@@ -1,5 +1,6 @@
 import rldev
 import carla_utils as cu
+import carla_utils.ros as ru
 from carla_utils import carla, navigation
 RoadOption = navigation.local_planner.RoadOption
 
@@ -8,6 +9,7 @@ import time
 import collections
 
 import rospy
+from nav_msgs.msg import Path
 from gps_common.msg import GPSFix
 
 from driver.clock import Clock
@@ -78,14 +80,14 @@ class LongPID(object):
 
 
 class PseudoAgentNoLearning(AgentNoLearning):
-    def __init__(self, config, global_path):
+    def __init__(self, config, global_path, rtk_driver):
         self.config = config
         self.global_path = global_path
         self.max_velocity = config.max_velocity
         self.wheelbase = config.wheelbase
 
         self.long_pid = LongPID(1/FREQ)
-        self.rtk_driver = RTK(rospub=True)
+        self.rtk_driver = rtk_driver
         if config.pseudo:
             self.can_driver = PseudoCanDriver()
         else:
@@ -139,7 +141,7 @@ class PseudoAgentNoLearning(AgentNoLearning):
         print('speed: ', current_state.v, vr)
         control_gear = (control_gear + 1) *0.5
         ### open loop
-        control_gear = 0.4
+        control_gear = 0.3
 
         ### apply
         # control_gear = 0
@@ -230,6 +232,7 @@ class EnvAgri(EnvNoLearning):
 
         self.clock = Clock(FREQ)
 
+        self.publisher_path = rospy.Publisher('/global_path', Path, queue_size=1, latch=True)
 
 
 
@@ -239,12 +242,22 @@ class EnvAgri(EnvNoLearning):
         # start_x, start_y = projection.gps2xy(30.258824339333334, 119.72750057183333)
         # end_x, end_y = projection.gps2xy(30.2585985237, 119.726511246)
 
-        global_path = get_global_path()
+
+        rtk_driver = RTK(rospub=True)
+        print('sleep 1s, generate global path')
+        time.sleep(2)
+        gps_data = rtk_driver.gps_data
+        x0, y0 = projection.gps2xy(gps_data.latitude, gps_data.longitude)
+        theta0 = projection.track2yaw(gps_data.track)
+        global_path = get_global_path(x0, y0, theta0)
+
+        header = ru.cvt.header('map', time.time())
+        self.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, global_path) )
 
         if self.learning:
             pass
         else:
-            self.agent = PseudoAgentNoLearning(self.config, global_path)
+            self.agent = PseudoAgentNoLearning(self.config, global_path, rtk_driver)
 
         time.sleep(2)
         print('sleep a little')
