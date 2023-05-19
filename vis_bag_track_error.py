@@ -18,8 +18,13 @@ bag_path = '~/save/2023-04-27-13-21-37-run3-P-only.bag'  ### Kp: 0.1683289394264
 # bag_path = '~/save/2023-04-27-13-34-14-run4.bag'  ### Kp: 0.2, Ki: 0.0, Kd: 0.0
 # bag_path = '~/save/2023-04-27-13-36-13-run5.bag'  ### Kp: 0.2, Ki: 0.0, Kd: 0.0
 # bag_path = '~/save/2023-04-27-13-37-43-run6.bag'  ### Kp: 0.16832893942643154, Ki: 0.0, Kd: 0.5
-bag_path = '~/save/2023-04-27-14-43-44-run9-adapt-PD.bag'  ### Kp: adaptive, Ki: 0.0, Kd: 0.1
-bag_path = '~/save/2023-04-27-15-18-37-run10-adapt-PD.bag'  ### Kp: adaptive, Ki: 0.0, Kd: 0.1
+bag_path = '~/dataset/agri/2023-04-27-14-43-44-run9-adapt-PD.bag'  ### Kp: adaptive, Ki: 0.0, Kd: 0.1
+bag_path = '~/dataset/agri/2023-04-27-15-18-37-run10-adapt-PD.bag'  ### Kp: adaptive, Ki: 0.0, Kd: 0.1
+bag_path = '~/dataset/agri/2023-04-27-15-27-09-run11-adapt-PD.bag'
+bag_path = '~/dataset/agri/2023-04-27-15-31-09-run12-adapt-PD-bad.bag'
+bag_path = '~/dataset/agri/2023-04-27-15-33-06-run13-adapt-PD-0.7.bag'
+bag_path = '~/dataset/agri/2023-04-27-15-36-22-run14-adapt-PD-0.7.bag'
+
 
 bag_name, _ = os.path.splitext(os.path.basename(os.path.expanduser(bag_path)))
 print(f'load bag: {bag_name}')
