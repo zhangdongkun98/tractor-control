@@ -13,7 +13,7 @@ from nav_msgs.msg import Path
 from gps_common.msg import GPSFix
 
 from driver.clock import Clock
-from driver.projection import Projection
+from driver.projection import projection
 from driver.rtk import RTK
 from driver.can import CanDriver, PseudoCanDriver
 
@@ -24,7 +24,6 @@ from .env_carla import EnvNoLearning, AgentNoLearning
 ### real vehicle
 wheelbase = 1.07
 
-projection = Projection()
 
 
 class PseudoWaypoint(object):
@@ -186,10 +185,16 @@ def get_global_path(x0, y0, theta0):  ### todo: check
     theta0 = rldev.pi2pi(theta0)
 
     start_x, start_y = x0, y0
+
+    ### v1: east or west
     if theta0 < np.deg2rad(90) and theta0 > -np.deg2rad(90):
         theta = 0.0
     else:
         theta = np.pi
+
+    ### v2
+    theta = theta0
+
     length = 100
 
     route = []

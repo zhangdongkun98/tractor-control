@@ -25,6 +25,8 @@ bag_path = '~/dataset/agri/2023-04-27-15-31-09-run12-adapt-PD-bad.bag'
 bag_path = '~/dataset/agri/2023-04-27-15-33-06-run13-adapt-PD-0.7.bag'
 bag_path = '~/dataset/agri/2023-04-27-15-36-22-run14-adapt-PD-0.7.bag'
 
+bag_path = '~/save/2023-05-19-18-01-03--run1.bag'
+
 
 bag_name, _ = os.path.splitext(os.path.basename(os.path.expanduser(bag_path)))
 print(f'load bag: {bag_name}')

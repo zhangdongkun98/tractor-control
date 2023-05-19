@@ -51,7 +51,13 @@ def run_one_episode_no_learning(config, env: rl_template.EnvSingleAgent, method,
         current_transform = cu.cvt.CarlaTransform.cua_state(current_state)
         target_waypoint, curvature = gp.target_waypoint(current_transform)
         target_state = cu.cvt.CuaState.carla_transform(target_waypoint.transform, v=current_state.v, k=curvature)
-        longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
+        current_state_rear = copy.copy(current_state)
+        wheelbase = 1.07
+        current_state_rear.x -= wheelbase * np.cos(current_state.theta)
+        current_state_rear.y -= wheelbase * np.sin(current_state.theta)
+
+        # longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
+        longitudinal_e, lateral_e, theta_e = cu.error_state(current_state_rear, target_state)
         error_paths.append(np.abs(lateral_e))
 
         if config.real:

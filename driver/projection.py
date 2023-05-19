@@ -4,7 +4,8 @@ import math
 import numpy as np
 
 class Projection(object):
-    def __init__(self, ref_lat=30.258824339333334, ref_lon=119.72750057183333):
+    # def __init__(self, ref_lat=30.258824339333334, ref_lon=119.72750057183333):
+    def __init__(self, ref_lat=30.11017668, ref_lon=119.76392807):
         self.R = 6378160
 
         self.ref_lat_rad = math.radians(ref_lat)

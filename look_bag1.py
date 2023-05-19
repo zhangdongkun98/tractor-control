@@ -12,8 +12,7 @@ bag_data = bag.read_messages(topics='/rtk_data')
 
 
 # from rtk_driver.rtk_driver import GPStoXY
-from driver.projection import Projection
-projection = Projection()
+from driver.projection import projection
 
 """
 https://stackoverflow.com/questions/16266809/convert-from-latitude-longitude-to-x-y
