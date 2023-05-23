@@ -9,13 +9,14 @@ import time
 import collections
 
 import rospy
+from std_msgs.msg import Float32
 from nav_msgs.msg import Path
 from gps_common.msg import GPSFix
 
 from driver.clock import Clock
 from driver.projection import projection
 from driver.rtk import RTK
-from driver.can import CanDriver, PseudoCanDriver
+from driver.can import CanDriver, PseudoCanDriver, PseudoCanDriverComplete
 
 from .env_carla import SR, FREQ
 from .env_carla import EnvNoLearning, AgentNoLearning
@@ -163,20 +164,20 @@ class PseudoAgentNoLearningVisual(AgentNoLearning):
         self.long_pid = LongPID(1/FREQ)
         self.ori_error = 0.0
         self.pos_error = 0.0
-        rospy.Subscriber('/ori_error', GPSFix, callback=self.callback_ori, queue_size=1)
-        rospy.Subscriber('/pos_error', GPSFix, callback=self.callback_pos, queue_size=1)
+        rospy.Subscriber('/ori_error', Float32, callback=self.callback_ori, queue_size=1)
+        rospy.Subscriber('/pos_error', Float32, callback=self.callback_pos, queue_size=1)
         self.rtk_driver = rtk_driver
         if config.pseudo:
-            self.can_driver = PseudoCanDriver()
+            self.can_driver = PseudoCanDriverComplete()
         else:
             self.can_driver = CanDriver(rospub=True)
         return
 
     def callback_ori(self, msg):
-        self.ori_error = 0.0
+        self.ori_error = msg.data
 
     def callback_pos(self, msg):
-        self.pos_error = 0.0
+        self.pos_error = -msg.data
     
 
     def stop(self):
@@ -191,14 +192,14 @@ class PseudoAgentNoLearningVisual(AgentNoLearning):
 
 
     def get_state(self):
-        x, y = self.pos_error, self.pos_error
+        x, y = self.pos_error, 0.4324
         theta = self.ori_error
         v = 0.0
         return cu.State(x=x, y=y, theta=theta, v=v)
 
 
     def get_transform(self):
-        x, y = self.pos_error, self.pos_error
+        x, y = self.pos_error, 0.4324
         theta = self.ori_error
 
         l = carla.Location(x=x, y=y)
@@ -300,7 +301,7 @@ class EnvAgri(EnvNoLearning):
 
         if not self.config.pseudo:
             rtk_driver = RTK(rospub=True)
-            print('sleep 1s, generate global path')
+            print('sleep 2s, generate global path')
             time.sleep(2)
             gps_data = rtk_driver.gps_data
             x0, y0 = projection.gps2xy(gps_data.latitude, gps_data.longitude)
@@ -310,7 +311,8 @@ class EnvAgri(EnvNoLearning):
             header = ru.cvt.header('map', time.time())
             self.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, global_path) )
         else:
-            rtk_driver = rldev.BaseData(stop_event=lambda _: 0, close=lambda _: 0)
+            rtk_driver = rldev.BaseData(stop_event=lambda x: 0, close=lambda x: 0)
+            global_path = get_global_path(0.0, 0.0, 0.0)
 
         if self.learning:
             pass

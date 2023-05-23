@@ -27,6 +27,14 @@ bag_path = '~/dataset/agri/2023-04-27-15-36-22-run14-adapt-PD-0.7.bag'
 
 bag_path = '~/save/2023-05-19-18-01-03--run1.bag'
 
+bag_path = '~/save/2023-05-23-15-11-46--run1-visual.bag'
+bag_path = '/media/nongji/WYF/0523/all_xiawu_1.bag'   ### tian3
+
+bag_path = '~/save/2023-05-23-18-34-49-run1-rtk.bag'   ### tian3
+
+bag_path = '/media/nongji/WYF/0523/all_xiawu_2_rtk.bag'  ### tian2, rtk
+
+bag_path = '/media/nongji/WYF/0523/all_xiawu_2.bag'  ### tian2, visual
 
 bag_name, _ = os.path.splitext(os.path.basename(os.path.expanduser(bag_path)))
 print(f'load bag: {bag_name}')
@@ -119,10 +127,12 @@ def visualize_data(ax, x, y, x_line, y_line, dist):
     calculate_metric(dist)
 
 
+import pdb; pdb.set_trace()
+
 
 ### before
-# xs = xs[1500:-500]
-# ys = ys[1500:-500]
+xs = xs[:-1000]
+ys = ys[:-1000]
 error_paths = []
 for x, y in zip(xs, ys):
     l = carla.Location(x=x, y=y)
@@ -131,7 +141,7 @@ for x, y in zip(xs, ys):
     error_paths.append(np.abs(lateral_e))
 error_paths = np.array(error_paths)
 
-_, metric_ref = calculate_metric(error_paths, metric=0.025)
+_, metric_ref = calculate_metric(error_paths, metric=0.075)
 
 ### after
 param, error_paths = fit_line(xs, ys)   ### vertial line
@@ -139,7 +149,7 @@ param, error_paths = fit_line(xs, ys)   ### vertial line
 x_line = xs
 y_line = param[0] * x_line + param[1]
 
-_, metric_fit = calculate_metric(error_paths, metric=0.025)
+_, metric_fit = calculate_metric(error_paths, metric=0.075)
 
 
 

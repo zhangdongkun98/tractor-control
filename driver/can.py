@@ -441,3 +441,26 @@ class PseudoCanDriver(CanDriver):
     
     def set_rotation(self, rotation_in):
         return
+
+
+
+
+class PseudoCanDriverComplete(object):
+    def __init__(self, rospub=False, gear_enable=True, steer_enable=False):
+        self.recv_steer_wheel = 0.0
+
+
+    def set_gear(self, gear):
+        return
+
+    def set_delta_gear(self, gear):
+        return
+    
+    def set_rotation(self, rotation_in):
+        return
+
+    def stop_event(self):
+        return
+    
+    def close(self):
+        return

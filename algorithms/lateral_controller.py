@@ -189,6 +189,8 @@ class LatPIDVisual(LatRWPF):
 
     def run_step(self, current_state, target_state, param):
         longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
+        # print('--------------dfdfdfdfd---------------: state: ', current_state)
+        lateral_e = current_state.x
 
         if abs(lateral_e) > 0.025:
             Kp = self.Kp *1.5
