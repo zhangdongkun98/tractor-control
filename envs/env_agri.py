@@ -152,32 +152,82 @@ class PseudoAgentNoLearning(AgentNoLearning):
 
 
 
-def get_global_path_fix():
-    # start_x, start_y = 6.058451788499951, -29.40062252106145
-    # start_x, start_y = 6.058451788499951, -29.40062252106145
-    # end_x, end_y = 6.058451788499951, 0.0
-    start_x, start_y = 8.0, -29.40062252106145
-    end_x, end_y = 8.0, 0.0
-    # 1.6, -25.6
-    start_x, start_y = 1.6, -25.7
-    end_x, end_y = -100, -25.7
-    start_x, start_y = 1.6, -29.
-    end_x, end_y = -100, -29.
 
-    length = np.hypot(end_x-start_x, end_y-start_y)
-    theta = np.arctan2(end_y-start_y, end_x-start_x)
-    route = []
-    current_length = 0.0
-    while True:
-        if current_length > length:
-            break
-        x = start_x + current_length * np.cos(theta)
-        y = start_y + current_length * np.sin(theta)
-        wp = PseudoWaypoint(x, y, theta)
-        route.append((wp, RoadOption.LANEFOLLOW))
-        current_length += SR
-    global_path = cu.GlobalPath(route)
-    return global_path
+class PseudoAgentNoLearningVisual(AgentNoLearning):
+    def __init__(self, config, global_path, rtk_driver):
+        self.config = config
+        self.global_path = global_path
+        self.max_velocity = config.max_velocity
+        self.wheelbase = config.wheelbase
+
+        self.long_pid = LongPID(1/FREQ)
+        self.ori_error = 0.0
+        self.pos_error = 0.0
+        rospy.Subscriber('/ori_error', GPSFix, callback=self.callback_ori, queue_size=1)
+        rospy.Subscriber('/pos_error', GPSFix, callback=self.callback_pos, queue_size=1)
+        self.rtk_driver = rtk_driver
+        if config.pseudo:
+            self.can_driver = PseudoCanDriver()
+        else:
+            self.can_driver = CanDriver(rospub=True)
+        return
+
+    def callback_ori(self, msg):
+        self.ori_error = 0.0
+
+    def callback_pos(self, msg):
+        self.pos_error = 0.0
+    
+
+    def stop(self):
+        self.can_driver.stop_event()
+        self.rtk_driver.stop_event()
+
+    def destroy(self):
+        self.can_driver.stop_event()
+        self.rtk_driver.stop_event()
+        self.can_driver.close()
+        self.rtk_driver.close()
+
+
+    def get_state(self):
+        x, y = self.pos_error, self.pos_error
+        theta = self.ori_error
+        v = 0.0
+        return cu.State(x=x, y=y, theta=theta, v=v)
+
+
+    def get_transform(self):
+        x, y = self.pos_error, self.pos_error
+        theta = self.ori_error
+
+        l = carla.Location(x=x, y=y)
+        r = carla.Rotation(yaw=np.rad2deg(theta))
+        return carla.Transform(l, r)
+
+
+    def apply_control(self, action):
+        vr = action[0]
+        steer = action[1]
+        current_state = self.get_state()
+        current_steer = projection.wheel2steer(self.can_driver.recv_steer_wheel)
+
+        ### steer
+        control_delta_steer = steer - current_steer
+        print(f'[steers, rad] target: {steer}, currrent: {current_steer}', np.rad2deg(control_delta_steer))
+
+        ### open loop
+        control_gear = 0.3
+
+        ### apply
+        # control_gear = 0
+        # control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
+        control_steer = np.clip(projection.steer2wheel(control_delta_steer) -3.5, -90, 90)
+        print(f'[control] gear: {control_gear}, steer: {control_steer}')
+        self.can_driver.set_gear(control_gear)
+        self.can_driver.set_rotation(control_steer)
+
+
 
 
 
@@ -262,7 +312,7 @@ class EnvAgri(EnvNoLearning):
         if self.learning:
             pass
         else:
-            self.agent = PseudoAgentNoLearning(self.config, global_path, rtk_driver)
+            self.agent = self.config.agent_cls(self.config, global_path, rtk_driver)
 
         time.sleep(2)
         print('sleep a little')

@@ -15,16 +15,82 @@ pip install pynput==1.7.6
 sudo apt install ros-melodic-can-msgs
 ```
 
-fangxiangpan  1 and a half
-
-feedback max 4780
 
 
-note:
-C-RS232
-note web page I/O setting 'bo te lv'
+# run driver
 
-### simulation
+- run rtk only (with ROS publish)
+
+```bash
+python driver/rtk.py
+```
+
+- run imu only (with ROS publish)
+
+```bash
+python driver/imu.py
+```
+
+
+
+
+- run can with keyboard (without ROS publish)
+
+```bash
+python run_keyboard.py
+```
+
+
+
+- run rtk and can (with ROS publish)
+
+```bash
+python run_driver.py
+```
+
+
+# real control
+
+0. roscore
+
+```bash
+roscore
+```
+
+1. step 1: keyboard backup
+
+```bash
+python run_keyboard.py
+```
+
+2. step 2: pid control
+
+- rtk
+
+```bash
+python run_argi.py pid
+```
+
+- visual
+
+```bash
+# python run_argi.py pid-visual --pseudo
+python run_argi.py pid-visual
+```
+
+
+1. step 3: record data
+
+```bash
+rosbag record -a
+```
+
+
+
+
+
+
+# simulation
 
 ```bash
 pip install osqp==0.6.2.post0
@@ -90,44 +156,10 @@ dead zone: -12.0  19.0
 
 
 
-# run
-
-## driver
-
-- run rtk only (with ROS publish)
-
-```bash
-python driver/rtk.py
-```
-
-- run imu only (with ROS publish)
-
-```bash
-python driver/imu.py
-```
 
 
 
-
-- run can with keyboard (without ROS publish)
-
-```bash
-python run_keyboard.py
-```
-
-
-
-- run rtk and can (with ROS publish)
-
-```bash
-python run_driver.py
-```
-
-
-
-
-
-# controller
+### controller
 
 ```
 

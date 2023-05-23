@@ -144,3 +144,74 @@ class LatPID(LatRWPF):
 
         return np.clip(steer, -1.0, 1.0) *self.max_steer
 
+
+
+
+
+class LatPIDVisual(LatRWPF):
+    def __init__(self, wheelbase, dt, scale=1.0):
+        self.wheelbase = wheelbase
+        self._dt = dt
+        self.scale = scale
+        self.max_steer = np.deg2rad(45)
+
+        self.Kp = 0.5
+        self.Ki = 5 * dt  ## 0.0
+        self.Kd = 0.01 / dt
+
+        from .params import DELAY, LAG
+        lag = LAG
+        delay = DELAY
+
+        Kp = (dt + delay/2) / (lag + delay/2)
+        Ki = dt + delay/2
+        Kd = dt * delay / (delay + 2*dt)
+        self.Kp = Kp
+        self.Ki = Ki * dt
+        self.Kd = Kd / dt *50
+        # self.Kd = Kd / dt *100
+        # self.Kd = Kd / dt /3
+        # self.Kp = 0.2
+        self.Ki = 0.0
+        self.Kd = 0.1
+
+        # self.Kp = 0.2
+        # self.Ki = Ki * dt *0
+        # self.Kd = 0.1
+
+        print(rldev.prefix(self) + f'PID parameter c: Kp: {Kp}, Ki: {Ki}, Kd: {Kd}')
+        print(rldev.prefix(self) + f'PID parameter: Kp: {self.Kp}, Ki: {self.Ki}, Kd: {self.Kd}')
+        # import pdb; pdb.set_trace()
+
+        self.e_buffer = deque([0.0], maxlen=10)
+
+        self.w_param = None
+
+    def run_step(self, current_state, target_state, param):
+        longitudinal_e, lateral_e, theta_e = cu.error_state(current_state, target_state)
+
+        if abs(lateral_e) > 0.025:
+            Kp = self.Kp *1.5
+            # Kp = self.Kp *3
+        else:
+            # Kp = self.Kp
+            Kp = self.Kp *0.7
+
+        error = lateral_e *self.scale
+
+        kr = target_state.k
+        steer0 = np.arctan(kr * self.wheelbase)
+
+
+        error_i = sum(self.e_buffer) + error
+        error_d = error - self.e_buffer[-1]
+        self.e_buffer.append(error)
+
+        steer = steer0 + Kp * error + self.Ki * error_i + self.Kd * error_d
+        print('\n')
+        print('error (m): ', lateral_e)
+        print('pid error: ', error, error_i, error_d)
+        print(f'pid [steer]: ', self.Kp * error, self.Ki * error_i, self.Kd * error_d)
+
+        return np.clip(steer, -1.0, 1.0) *self.max_steer
+

@@ -4,6 +4,18 @@
 
 
 
+
+fangxiangpan  1 and a half
+
+feedback max 4780
+
+
+note:
+C-RS232
+note web page I/O setting 'bo te lv'
+
+
+
 # 华测RTK
 
 
