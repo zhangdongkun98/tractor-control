@@ -123,6 +123,146 @@ class RTK(object):
         return rldev.BaseData(lat=lat, lon=lon, heading=heading, speed=speed)
 
 
+from sensor_msgs.msg import Imu
+
+class RTK2IMU(object):
+    def __init__(self, rospub=False):
+        self.serial = serial.Serial('/dev/ttyUSB0', 460800)
+        
+        if rospub:
+            self.publisher_rtk = rospy.Publisher('/rtk_data', GPSFix, queue_size=1)
+            self.publisher_rtk_full = rospy.Publisher('/rtk_data_full', String, queue_size=1)
+            self.publisher_imu = rospy.Publisher('/imu_data', Imu, queue_size=1)
+            self.publisher_imu_full = rospy.Publisher('/imu_data_full', String, queue_size=1)
+        else:
+            self.publisher_rtk = PseudoPublisher()
+            self.publisher_rtk_full = PseudoPublisher()
+
+        self.gps_data = None
+        self.stop_recv = threading.Event()
+        recv_thread = threading.Thread(target=self.read_serial)
+        self.stop_recv.clear()
+        recv_thread.start()
+
+
+    def stop_event(self):
+        self.stop_recv.set()
+
+    def close(self):
+        self.serial.close()
+
+
+
+    def read_serial(self):
+        msg_seq = 0
+        while not self.stop_recv.is_set():
+            line = self.serial.readline()
+
+            if line[:6] == b'$GPCHC':
+                string = line.decode('utf8').replace('\x00', '')
+
+                full_data = String()
+                full_data.data = string
+                self.publisher_rtk_full.publish(full_data)
+
+                msg_seq += 1
+
+                try:
+                    data = self.string2data_rtk(string)
+                except ValueError as e:
+                    import traceback
+                    traceback.print_exc()
+                    print('wrong data:', string)
+                    # import pdb; pdb.set_trace()
+                    continue
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    print('wrong data:', string)
+                    continue
+
+                ros_msg = GPSFix()
+                ros_msg.header = Header()
+                ros_msg.header.seq = msg_seq
+                ros_msg.header.stamp = rospy.Time.from_sec(time.time())
+
+                ros_msg.latitude = data.lat
+                ros_msg.longitude = data.lon
+                ros_msg.track = data.heading
+                ros_msg.speed = data.speed
+                # print(ros_msg)
+                # print('\n\n\n')
+                self.gps_data = ros_msg
+                self.publisher_rtk.publish(ros_msg)
+
+
+            if line[:6] == b'$GTIMU':
+                string = line.decode('utf8').replace('\x00', '')
+
+                full_data = String()
+                full_data.data = string
+                self.publisher_imu_full.publish(full_data)
+
+                msg_seq += 1
+
+                try:
+                    data = self.string2data_imu(string)
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    print('wrong data:', string)
+                    continue
+
+                ros_msg = Imu()
+                ros_msg.header = Header()
+                ros_msg.header.seq = msg_seq
+                ros_msg.header.stamp = rospy.Time.from_sec(time.time())
+
+                ros_msg.angular_velocity.x = data.wx
+                ros_msg.angular_velocity.y = data.wy
+                ros_msg.angular_velocity.z = data.wz
+                ros_msg.linear_acceleration.x = data.ax
+                ros_msg.linear_acceleration.y = data.ay
+                ros_msg.linear_acceleration.z = data.az
+                self.imu_data = ros_msg
+                self.publisher_imu.publish(ros_msg)
+
+
+
+    def string2data_rtk(self, string):
+        data_list = string.split(',')
+        # print('[GPCHC] data: ', data_list)
+
+        time_week = float(data_list[2-1])
+        time_sec = float(data_list[3-1])
+        current_time = gps2time(time_week, time_sec)
+        # print('current_time: ', current_time)
+
+        lat = float(data_list[13 -1])
+        lon = float(data_list[14 -1])
+        heading = float(data_list[4 -1])
+        speed = float(data_list[19 -1])
+        return rldev.BaseData(lat=lat, lon=lon, heading=heading, speed=speed)
+
+
+    def string2data_imu(self, string):
+        data_list = string.split(',')
+        # print('[GPCHC] data: ', data_list)
+
+        time_week = float(data_list[2-1])
+        time_sec = float(data_list[3-1])
+        current_time = gps2time(time_week, time_sec)
+        print('current_time: ', current_time)
+
+        wx = float(data_list[4 -1])
+        wy = float(data_list[5 -1])
+        wz = float(data_list[6 -1])
+        ax = float(data_list[7 -1]) * 9.80665
+        ay = float(data_list[8 -1]) * 9.80665
+        az = float(data_list[9 -1]) * 9.80665
+        return rldev.BaseData(wx=wx, wy=wy, wz=wz, ax=ax, ay=ay, az=az)
+
+
 
 
 
@@ -130,7 +270,8 @@ class RTK(object):
 
 if __name__ == '__main__':
     rospy.init_node('rtk_driver', anonymous=False)
-    rtk = RTK(rospub=True)
+    # rtk = RTK(rospub=True)
+    rtk = RTK2IMU(rospub=True)
 
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
