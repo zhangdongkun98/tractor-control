@@ -298,16 +298,19 @@ class EnvAgri(EnvNoLearning):
         # end_x, end_y = projection.gps2xy(30.2585985237, 119.726511246)
 
 
-        rtk_driver = RTK(rospub=True)
-        print('sleep 1s, generate global path')
-        time.sleep(2)
-        gps_data = rtk_driver.gps_data
-        x0, y0 = projection.gps2xy(gps_data.latitude, gps_data.longitude)
-        theta0 = projection.track2yaw(gps_data.track)
-        global_path = get_global_path(x0, y0, theta0)
+        if not self.config.pseudo:
+            rtk_driver = RTK(rospub=True)
+            print('sleep 1s, generate global path')
+            time.sleep(2)
+            gps_data = rtk_driver.gps_data
+            x0, y0 = projection.gps2xy(gps_data.latitude, gps_data.longitude)
+            theta0 = projection.track2yaw(gps_data.track)
+            global_path = get_global_path(x0, y0, theta0)
 
-        header = ru.cvt.header('map', time.time())
-        self.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, global_path) )
+            header = ru.cvt.header('map', time.time())
+            self.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, global_path) )
+        else:
+            rtk_driver = rldev.BaseData(stop_event=lambda _: 0, close=lambda _: 0)
 
         if self.learning:
             pass
