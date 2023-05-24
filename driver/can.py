@@ -148,18 +148,28 @@ class CanDriver(object):
                         # print('fff', msg)
                         # value = msg[4]*0xff+msg[5]
                         # print('value', 255-msg[4], 255-msg[5])
+
+                        high = msg[4]
+                        low = msg[5]
+                        
                         if msg[4] > 0xf0:
+                            # value = - ((256-high)*256+ (256-low))
                             value = - ((255-msg[4])*255+ (255-msg[5]))
                         else:
+                            # value = (msg[4])*256+ msg[5]
                             value = (msg[4])*255+ msg[5]
                         # print(value, msg[4], msg[5])
+
+                        high = msg[4]
+                        low = msg[5]
+                        new_value = int.from_bytes(high.to_bytes(1, 'big') + low.to_bytes(1, 'big'),  byteorder='big', signed=True)
 
                         steer_wheel = value /10  ### deg
                         self.recv_steer_wheel_time = time.time()
                         self.recv_steer_wheel = steer_wheel
                         # steer_wheel = '0b' + str(msg[4]) + str(msg[5])
                         # steer_wheel = int(steer_wheel, 2)
-                        print('-----------------------------steer_wheel: ', steer_wheel)
+                        print('-----------------------------steer_wheel: ', steer_wheel, new_value /10)
                         # print('\n')
 
                         # if value > 0x00ff:
