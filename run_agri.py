@@ -120,13 +120,30 @@ if __name__ == "__main__":
         L = env.wheelbase
         from algorithms.lateral_controller import LatRWPF as Method
         method = Method(L, 1/env.control_frequency)
+
+
+
     elif algo == 'pid':
         learning = False
+        from envs.env_agri import PseudoAgentNoLearning as agent_cls
+        config.set('agent_cls', agent_cls)
         env = init_env(config, writer, mode, learning)
         L = env.wheelbase
         from algorithms.lateral_controller import LatPID as Method
         method = Method(L, 1/env.control_frequency, scale=10)
     
+    elif algo == 'pid-visual':
+        learning = False
+        from envs.env_agri import PseudoAgentNoLearningVisual as agent_cls
+        config.set('agent_cls', agent_cls)
+        env = init_env(config, writer, mode, learning)
+        L = env.wheelbase
+        from algorithms.lateral_controller import LatPIDVisual as Method
+        method = Method(L, 1/env.control_frequency, scale=10)
+    
+
+
+
 
     elif algo == 'td3':
         learning = True

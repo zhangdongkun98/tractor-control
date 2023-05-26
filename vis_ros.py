@@ -60,7 +60,7 @@ class RTKSub(object):
     def run_step(self):
         tfmsg = TFMessage()
 
-        header = ru.cvt.header('map', time.time())
+        header = ru.cvt.header('odom', time.time())
 
         l = carla.Location(x=self.x, y=self.y)
         r = carla.Rotation(yaw=np.rad2deg(self.theta))
@@ -94,8 +94,8 @@ if __name__ == '__main__':
     # gp = get_global_path(x0, y0, theta0)
     plt.plot(rtk.gp_x, rtk.gp_y, 'ob')
 
-    # header = ru.cvt.header('map', time.time())
-    # rtk.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, gp) )
+    header = ru.cvt.header('odom', time.time())
+    rtk.publisher_path.publish( ru.cvt.NavPath.cua_global_path(header, gp) )
 
 
     while not rospy.is_shutdown():
