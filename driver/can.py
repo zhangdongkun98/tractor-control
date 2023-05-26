@@ -41,7 +41,7 @@ class CanDriver(object):
         self.cmd = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         self.flg = canlib.canMSG_EXT
 
-        self.send_channel = self.set_up_channel(channel=0)
+        self.send_channel = self.set_up_channel(channel=1)
         # self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
@@ -84,7 +84,7 @@ class CanDriver(object):
             self.activate_steer()
         else:
             self.deactivate_steer()
-        self.activate_gear()
+        # self.activate_gear()
 
         time.sleep(1.1)
         return
@@ -108,7 +108,7 @@ class CanDriver(object):
         # self.stop_send.set()
         # self.stop_recv.set()
 
-        self.stop_gear()
+        # self.stop_gear()
         self.deactivate_steer()
         # self.deactivate_gear()
 
@@ -164,7 +164,7 @@ class CanDriver(object):
                         low = msg[5]
                         new_value = int.from_bytes(high.to_bytes(1, 'big') + low.to_bytes(1, 'big'),  byteorder='big', signed=True)
 
-                        steer_wheel = value /10  ### deg
+                        steer_wheel = new_value /10  ### deg
                         self.recv_steer_wheel_time = time.time()
                         self.recv_steer_wheel = steer_wheel
                         # steer_wheel = '0b' + str(msg[4]) + str(msg[5])

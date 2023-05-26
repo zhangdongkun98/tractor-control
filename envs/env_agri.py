@@ -141,14 +141,14 @@ class PseudoAgentNoLearning(AgentNoLearning):
         print('speed: ', current_state.v, vr)
         control_gear = (control_gear + 1) *0.5
         ### open loop
-        control_gear = 0.3
+        control_gear = 0.56
 
         ### apply
         # control_gear = 0
         # control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
         control_steer = np.clip(projection.steer2wheel(control_delta_steer) -3.5, -90, 90)
         print(f'[control] gear: {control_gear}, steer: {control_steer}')
-        self.can_driver.set_gear(control_gear)
+        # self.can_driver.set_gear(control_gear)
         self.can_driver.set_rotation(control_steer)
 
 
@@ -218,14 +218,15 @@ class PseudoAgentNoLearningVisual(AgentNoLearning):
         print(f'[steers, rad] target: {steer}, currrent: {current_steer}', np.rad2deg(control_delta_steer))
 
         ### open loop
-        control_gear = 0.3
+        control_gear = 0.56
+        # control_gear = 0.3
 
         ### apply
         # control_gear = 0
         # control_steer = np.clip(projection.steer2wheel(control_delta_steer), -90, 90)
         control_steer = np.clip(projection.steer2wheel(control_delta_steer) -3.5, -90, 90)
         print(f'[control] gear: {control_gear}, steer: {control_steer}')
-        self.can_driver.set_gear(control_gear)
+        # self.can_driver.set_gear(control_gear)
         self.can_driver.set_rotation(control_steer)
 
 

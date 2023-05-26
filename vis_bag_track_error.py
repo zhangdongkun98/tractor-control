@@ -36,6 +36,17 @@ bag_path = '/media/nongji/WYF/0523/all_xiawu_2_rtk.bag'  ### tian2, rtk
 
 bag_path = '/media/nongji/WYF/0523/all_xiawu_2.bag'  ### tian2, visual
 
+bag_path = '~/save/2023-05-24-16-08-04--run1-rtk.bag'
+bag_path = '~/save/2023-05-24-16-14-16--run2-rtk.bag'
+
+
+bag_path = '~/save/2023-05-26-10-34-50--run1-rtk.bag'
+
+bag_path = '~/save/2023-05-26-11-37-56--test1-rtk.bag'
+
+bag_path = '/media/nongji/WYF/0526/all_1.bag'
+metric_value = 0.075
+
 bag_name, _ = os.path.splitext(os.path.basename(os.path.expanduser(bag_path)))
 print(f'load bag: {bag_name}')
 bag = rosbag.Bag(os.path.expanduser(bag_path))
@@ -105,6 +116,33 @@ wheelbase = 1.07
 xs -= wheelbase * np.cos(thetas)
 ys -= wheelbase * np.sin(thetas)
 
+import matplotlib.pyplot as plt
+
+# fig = plt.figure()
+# axes = fig.subplots(2,1)
+
+# iids = [2.3e+2, 1.75e+3, 3.46e+3, 5.94e+3]
+
+# dist = 0.0
+# xs_stop = []
+# ys_stop = []
+# for iid in iids:
+#     x = xs[int(iid)]
+#     y = ys[int(iid)]
+#     xs_stop.append(x)
+#     ys_stop.append(y)
+
+# dx = np.diff(xs_stop)
+# dy = np.diff(ys_stop)
+# ds = np.hypot(dx, dy)
+# import pdb; pdb.set_trace()
+
+# axes[0].plot(np.arange(len(xs)), xs, '-r')
+# axes[1].plot(np.arange(len(ys)), ys, '-r')
+
+# plt.show()
+# import pdb; pdb.set_trace()
+
 
 
 def fit_line(x, y):
@@ -127,12 +165,12 @@ def visualize_data(ax, x, y, x_line, y_line, dist):
     calculate_metric(dist)
 
 
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 
 
 ### before
-xs = xs[:-1000]
-ys = ys[:-1000]
+# xs = xs[:-1000]
+# ys = ys[:-1000]
 error_paths = []
 for x, y in zip(xs, ys):
     l = carla.Location(x=x, y=y)
@@ -141,7 +179,7 @@ for x, y in zip(xs, ys):
     error_paths.append(np.abs(lateral_e))
 error_paths = np.array(error_paths)
 
-_, metric_ref = calculate_metric(error_paths, metric=0.075)
+_, metric_ref = calculate_metric(error_paths, metric=metric_value)
 
 ### after
 param, error_paths = fit_line(xs, ys)   ### vertial line
@@ -149,7 +187,7 @@ param, error_paths = fit_line(xs, ys)   ### vertial line
 x_line = xs
 y_line = param[0] * x_line + param[1]
 
-_, metric_fit = calculate_metric(error_paths, metric=0.075)
+_, metric_fit = calculate_metric(error_paths, metric=metric_value)
 
 
 
