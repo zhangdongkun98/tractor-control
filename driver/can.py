@@ -458,6 +458,7 @@ class PseudoCanDriver(CanDriver):
 class PseudoCanDriverComplete(object):
     def __init__(self, rospub=False, gear_enable=True, steer_enable=False):
         self.recv_steer_wheel = 0.0
+        self.max_gear = 20000
 
 
     def set_gear(self, gear):

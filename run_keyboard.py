@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 
-from driver.can import CanDriver
+from driver.can import CanDriver, PseudoCanDriverComplete
 from driver.kb_controller import KeyBoardController
 
 
@@ -11,6 +11,7 @@ from driver.kb_controller import KeyBoardController
 
 if __name__ == '__main__':
     can_driver = CanDriver(rospub=False, steer_enable=False)
+    # can_driver = PseudoCanDriverComplete()
 
     try:
         
