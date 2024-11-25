@@ -18,17 +18,12 @@ except:
     pass
 
 
-class PseudoChannel(object):
-    def write_raw(self, *args, **kwargs):
-        return
+from .can import PseudoChannel
 
-    def read(self):
-        return None, None, None, None, None
+"""
+for tractor.
+"""
 
-    def busOff(self):
-        return
-    def close(self):
-        return
 
 
 # Device: Kvaser leaf light 2xHS
@@ -41,7 +36,7 @@ class CanDriver(object):
         self.cmd = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         self.flg = canlib.canMSG_EXT
 
-        self.send_channel = self.set_up_channel(channel=1)
+        self.send_channel = self.set_up_channel(channel=0)
         # self.send_channel = PseudoChannel()
         self.recv_channel = self.send_channel
         
@@ -145,6 +140,7 @@ class CanDriver(object):
 
                     ### steer wheel
                     if msg[0] == 0x81 and msg[1] == 0x01:
+                        print('/////////////////////////////// recieve steer')
                         # print('fff', msg)
                         # value = msg[4]*0xff+msg[5]
                         # print('value', 255-msg[4], 255-msg[5])
@@ -433,7 +429,57 @@ class CanDriver(object):
         msg[3] = rotation & 0xff
         self.rotation_time = time.time()
         self.rotation = rotation_in
+        print('[send rotation] ', msg)
         self.send(msg)
+
+
+    def set_throttle(self, throttle):
+        """
+            throttle: [0, 1]
+        """
+
+        throttle = np.clip(throttle, 0, 1)
+        throttle_in = throttle *5000
+        throttle_in = np.clip(throttle_in, 0, 5000)
+        msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg[0] = 0x21
+        msg[1] = (throttle_in >> 8) & 0xff#0x00
+        msg[2] = throttle_in & 0xff#0x00
+        print(rldev.prefix(self) + str(msg))
+        self.send(msg)
+
+
+
+
+    def set_delta_throttle(self, throttle):
+        """
+            throttle: [-1, 1]
+        """
+
+        msg = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg[0] = 0x22
+
+        throttle = np.clip(throttle, -1, 1)
+        if throttle > 0:
+            throttle_in = throttle *5000
+            msg[1] = 0x00
+        else:
+            throttle_in = -throttle *5000
+            msg[1] = 0x01
+        throttle_in = int(np.clip(throttle_in, 0, 5000))
+
+        msg[2] = (throttle_in >> 8) & 0xff#0x00
+        msg[3] = throttle_in & 0xff#0x00
+        print(rldev.prefix(self) + str(msg), throttle, throttle_in)
+        self.send(msg)
+
+
+
+
+
+
+
+
 
 
 
@@ -458,7 +504,6 @@ class PseudoCanDriver(CanDriver):
 class PseudoCanDriverComplete(object):
     def __init__(self, rospub=False, gear_enable=True, steer_enable=False):
         self.recv_steer_wheel = 0.0
-        self.max_gear = 20000
 
 
     def set_gear(self, gear):
