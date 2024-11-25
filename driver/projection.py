@@ -17,13 +17,21 @@ class Projection(object):
 
 
     def gps2xy(self, lat, lon):
-        lat_rad = math.radians(lat)
-        lon_rad = math.radians(lon)
+        lat_rad = np.deg2rad(lat)
+        lon_rad = np.deg2rad(lon)
 
         x = self.R * lon_rad * np.cos(self.ref_lat_rad)
         y = self.R * lat_rad
 
         return x -self.x0, y -self.y0
+
+    def xy2gps(self, x, y):
+        x += self.x0
+        y += self.y0
+        lon_rad = x / self.R / np.cos(self.ref_lat_rad)
+        lat_rad = y / self.R
+        return np.rad2deg(lon_rad), np.rad2deg(lat_rad)
+
 
 
     def track2yaw(self, track):
@@ -46,6 +54,9 @@ class Projection(object):
         """
         # return np.rad2deg(steer) * (360 / 30)
         return -np.rad2deg(steer) * (360 / 30)
+
+
+
 
 
 projection = Projection()

@@ -77,7 +77,7 @@ for data in bag_data:
 lat = np.array(lat)
 lon = np.array(lon)
 
-np.savetxt('./rtk.txt', np.stack([lat, lon], axis=1))
+np.savetxt('./rtk.txt', np.stack([lat, lon], axis=1), fmt='%.8f')
 import pdb; pdb.set_trace()
 
 

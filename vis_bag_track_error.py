@@ -28,24 +28,43 @@ bag_path = '~/dataset/agri/2023-04-27-15-36-22-run14-adapt-PD-0.7.bag'
 bag_path = '~/save/2023-05-19-18-01-03--run1.bag'
 
 bag_path = '~/save/2023-05-23-15-11-46--run1-visual.bag'
-bag_path = '/media/nongji/WYF/0523/all_xiawu_1.bag'   ### tian3
+bag_path = '/media/ff/WYF/0523/all_xiawu_1.bag'   ### tian3
 
 bag_path = '~/save/2023-05-23-18-34-49-run1-rtk.bag'   ### tian3
 
-bag_path = '/media/nongji/WYF/0523/all_xiawu_2_rtk.bag'  ### tian2, rtk
+bag_path = '/media/ff/WYF/0523/all_xiawu_2_rtk.bag'  ### tian2, rtk
 
-bag_path = '/media/nongji/WYF/0523/all_xiawu_2.bag'  ### tian2, visual
-
-bag_path = '~/save/2023-05-24-16-08-04--run1-rtk.bag'
-bag_path = '~/save/2023-05-24-16-14-16--run2-rtk.bag'
-
-
-bag_path = '~/save/2023-05-26-10-34-50--run1-rtk.bag'
-
-bag_path = '~/save/2023-05-26-11-37-56--test1-rtk.bag'
-
-bag_path = '/media/nongji/WYF/0526/all_1.bag'
+bag_path = '/media/ff/WYF/0524/all_xiawu_2.bag'  ### visual
 metric_value = 0.075
+
+# bag_path = '~/save/2023-05-24-16-08-04--run1-rtk.bag'
+# bag_path = '~/save/2023-05-24-16-14-16--run2-rtk.bag'
+
+
+# bag_path = '~/save/2023-05-26-10-34-50--run1-rtk.bag'
+
+# bag_path = '~/save/2023-05-26-11-37-56--test1-rtk.bag'
+
+bag_path = '/media/ff/WYF/0526/all_2.bag'
+metric_value = 0.075
+
+# bag_path = '/media/ff/WYF/0524/all_xiawu_1_cut.bag'
+# metric_value = 0.075
+
+# bag_path = '/media/ff/WYF/0523/all_xiawu_1.bag'
+# metric_value = 0.075
+
+# bag_path = '/media/ff/WYF/0523/all_xiawu_2.bag'
+# metric_value = 0.075
+
+
+
+# bag_path = '/media/ff/WYF/0524/all_xiawu_2.bag'
+# metric_value = 0.075
+
+
+
+
 
 bag_name, _ = os.path.splitext(os.path.basename(os.path.expanduser(bag_path)))
 print(f'load bag: {bag_name}')
@@ -83,24 +102,29 @@ for data in bag_data:
     speeds.append(data.message.speed)
     times.append(rospy.Time.to_sec(data.message.header.stamp))
 
-path_data = list(bag.read_messages(topics='/global_path'))[0].message
 
 
-### recover global path
-route = []
-for pose in path_data.poses:
-    q = (
-        pose.pose.orientation.x,
-        pose.pose.orientation.y,
-        pose.pose.orientation.z,
-        pose.pose.orientation.w,
-    )
-    m = tf.transformations.quaternion_matrix(q)
-    roll, pitch, yaw = tf.transformations.euler_from_matrix(m)
 
-    wp = PseudoWaypoint(pose.pose.position.x, pose.pose.position.y, yaw)
-    route.append((wp, RoadOption.LANEFOLLOW))
-gp = cu.GlobalPath(route)
+
+
+# path_data = list(bag.read_messages(topics='/global_path'))[0].message
+
+
+# ### recover global path
+# route = []
+# for pose in path_data.poses:
+#     q = (
+#         pose.pose.orientation.x,
+#         pose.pose.orientation.y,
+#         pose.pose.orientation.z,
+#         pose.pose.orientation.w,
+#     )
+#     m = tf.transformations.quaternion_matrix(q)
+#     roll, pitch, yaw = tf.transformations.euler_from_matrix(m)
+
+#     wp = PseudoWaypoint(pose.pose.position.x, pose.pose.position.y, yaw)
+#     route.append((wp, RoadOption.LANEFOLLOW))
+# gp = cu.GlobalPath(route)
 
 
 
@@ -115,6 +139,10 @@ wheelbase = 1.07
 
 xs -= wheelbase * np.cos(thetas)
 ys -= wheelbase * np.sin(thetas)
+
+# data_visual_xy = np.stack([xs, ys], axis=1)
+# np.savetxt('data/visual_xy.txt', data_visual_xy, fmt='%f')
+
 
 import matplotlib.pyplot as plt
 
@@ -171,18 +199,24 @@ def visualize_data(ax, x, y, x_line, y_line, dist):
 ### before
 # xs = xs[:-1000]
 # ys = ys[:-1000]
-error_paths = []
-for x, y in zip(xs, ys):
-    l = carla.Location(x=x, y=y)
-    current_transform = carla.Transform(location=l)
-    _, lateral_e, theta_e = gp.error(current_transform)
-    error_paths.append(np.abs(lateral_e))
-error_paths = np.array(error_paths)
+# error_paths = []
+# for x, y in zip(xs, ys):
+#     l = carla.Location(x=x, y=y)
+#     current_transform = carla.Transform(location=l)
+#     _, lateral_e, theta_e = gp.error(current_transform)
+#     error_paths.append(np.abs(lateral_e))
+# error_paths = np.array(error_paths)
 
-_, metric_ref = calculate_metric(error_paths, metric=metric_value)
+# _, metric_ref = calculate_metric(error_paths, metric=metric_value)
 
 ### after
 param, error_paths = fit_line(xs, ys)   ### vertial line
+
+
+x_projection = xs + error_paths *np.cos(np.arctan(param[0]) + np.pi/2)
+y_projection = ys + error_paths *np.sin(np.arctan(param[0]) + np.pi/2)
+np.savetxt('data/visual_line.txt', np.stack([x_projection, y_projection], axis=1), fmt='%f')
+
 
 x_line = xs
 y_line = param[0] * x_line + param[1]
@@ -190,26 +224,31 @@ y_line = param[0] * x_line + param[1]
 _, metric_fit = calculate_metric(error_paths, metric=metric_value)
 
 
-
+# print('line dist: ', np.hypot(xs[0] - xs[-1], ys[0] - ys[-1]))
+print('line dist: ', np.hypot(xs[0] - xs[-1], ys[0] - ys[-1]), np.hypot(np.diff(xs), np.diff(ys)).sum())
 
 import matplotlib.pyplot as plt
 
 fig = plt.figure(figsize=(30,16), dpi=100)
-ax = fig.subplots(1, 1)
+axes = fig.subplots(2, 1)
 
-ax.plot(gp.x, gp.y, 'ob')
-ax.plot(x_line, y_line, 'oy')
-ax.plot(gp.x[0], gp.y[0], 'oy')
-ax.plot(xs, ys, 'or')
-ax.plot(xs[0], ys[0], 'og')
-ax.set_title(f'[metric] ref line: {metric_ref} %, fit line: {metric_fit} %', fontsize=15)
-ax.set_xlabel('x (m)', fontsize=15)
-ax.set_ylabel('y (m)', fontsize=15)
+ax = axes[0]
+# ax.plot(gp.x, gp.y, 'ob')
+# ax.plot(x_line, y_line, 'oy')
+# ax.plot(gp.x[0], gp.y[0], 'oy')
+# ax.plot(xs, ys, 'or')
+# ax.plot(xs[0], ys[0], 'og')
+# ax.set_title(f'[metric] ref line: {metric_ref} %, fit line: {metric_fit} %', fontsize=15)
+# ax.set_xlabel('x (m)', fontsize=15)
+# ax.set_ylabel('y (m)', fontsize=15)
 # ax.set_xlabel(metric_str, fontsize=15)
 # ax.plot(x1_line, y1_line, '-b')
 # ax.plot(x2_line, y2_line, '-b')
 # ax.set_aspect('equal', adjustable='box')
 
+
+ax = axes[1]
+ax.plot(error_paths, 'or')
 
 # visualize_data(ax, x1, y1, x1_line, y1_line, dist1)
 # visualize_data(ax, x2, y2, x2_line, y2_line, dist2)
